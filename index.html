@@ -1288,13 +1288,23 @@ function openCatMgr() { renderCatList(); renderColorSwatches(); document.getElem
 function closeCatMgr() { document.getElementById('catModal').classList.remove('open'); renderAll(); }
 
 // ═══════════════════════════════════════════════════════
-// Google Calendar — Real-time sync
+// Google Calendar — Real-time sync (전용 캘린더)
 // ═══════════════════════════════════════════════════════
-const GCAL_CLIENT_ID = '22239193799-nhjsdkvoajcccifovf1leglhella8rpv.apps.googleusercontent.com';
-const GCAL_SCOPE     = 'https://www.googleapis.com/auth/calendar.events';
-const GCAL_API       = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
+const GCAL_CLIENT_ID  = '22239193799-nhjsdkvoajcccifovf1leglhella8rpv.apps.googleusercontent.com';
+const GCAL_SCOPE      = 'https://www.googleapis.com/auth/calendar';
+const GCAL_CAL_NAME   = '🌿 leaflyene 운영플래너';
+const GCAL_CAL_COLOR  = '#7986CB'; // 인디고
+const GCAL_BASE       = 'https://www.googleapis.com/calendar/v3';
+const SK_GCAL_ID      = 'leaflyene-gcal-calid';
+
 let gcalToken       = null;
 let gcalTokenClient = null;
+let gcalCalId       = localStorage.getItem(SK_GCAL_ID) || null; // 전용 캘린더 ID
+
+function gcalEventsUrl(eventId='') {
+  const base = `${GCAL_BASE}/calendars/${encodeURIComponent(gcalCalId||'primary')}/events`;
+  return eventId ? `${base}/${eventId}` : base;
+}
 
 // Init — called once GIS library is loaded
 function gcalInit() {
@@ -1307,42 +1317,81 @@ function gcalInit() {
 }
 window.addEventListener('load', ()=>setTimeout(gcalInit,500));
 
-function gcalOnToken(resp) {
+async function gcalOnToken(resp) {
   if(resp.error){ console.warn('GCal auth error:', resp); return; }
   gcalToken = resp.access_token;
+  updateGcalBtn('⏳ 캘린더 준비 중...');
+
+  // 전용 캘린더 가져오거나 새로 만들기
+  await gcalGetOrCreateCalendar();
   updateGcalBtn();
-  // Sync all tasks that don't yet have a gcalEventId
+
+  // 아직 연동 안 된 업무만 새로 푸시
   tasks.filter(t=>!t.gcalEventId).forEach(t=>gcalCreateEvent(t));
+}
+
+async function gcalGetOrCreateCalendar() {
+  // 이미 저장된 ID가 있으면 유효한지 확인
+  if(gcalCalId) {
+    const check = await gcalRequest('GET', `${GCAL_BASE}/calendars/${encodeURIComponent(gcalCalId)}`);
+    if(check?.ok) return; // 기존 캘린더 그대로 사용
+    gcalCalId = null; localStorage.removeItem(SK_GCAL_ID);
+  }
+
+  // 캘린더 목록에서 동일 이름 검색
+  const listRes = await gcalRequest('GET', `${GCAL_BASE}/users/me/calendarList`);
+  if(listRes?.ok) {
+    const list = await listRes.json();
+    const found = (list.items||[]).find(c=>c.summary===GCAL_CAL_NAME);
+    if(found){ gcalCalId=found.id; localStorage.setItem(SK_GCAL_ID,gcalCalId); return; }
+  }
+
+  // 없으면 새로 생성
+  const createRes = await gcalRequest('POST', `${GCAL_BASE}/calendars`, {
+    summary: GCAL_CAL_NAME,
+    description: 'leaflyene house 운영플래너에서 자동 생성된 업무 캘린더',
+    timeZone: 'Asia/Seoul',
+  });
+  if(createRes?.ok) {
+    const cal = await createRes.json();
+    gcalCalId = cal.id;
+    localStorage.setItem(SK_GCAL_ID, gcalCalId);
+    // 캘린더 색상 설정
+    await gcalRequest('PATCH', `${GCAL_BASE}/users/me/calendarList/${encodeURIComponent(gcalCalId)}`, {
+      colorId: '9', // 블루베리
+      backgroundColor: GCAL_CAL_COLOR,
+    });
+  }
 }
 
 function gcalToggleAuth() {
   if(gcalToken){
-    if(!confirm('구글 캘린더 연동을 해제하시겠습니까?')) return;
+    if(!confirm('구글 캘린더 연동을 해제하시겠습니까?\n(구글 캘린더의 일정은 삭제되지 않습니다)')) return;
     google.accounts.oauth2.revoke(gcalToken, ()=>{});
     gcalToken = null;
     updateGcalBtn();
   } else {
     if(!gcalTokenClient){ alert('구글 라이브러리 로딩 중입니다. 잠시 후 다시 시도하세요.'); return; }
-    gcalTokenClient.requestAccessToken({prompt:'consent'});
+    gcalTokenClient.requestAccessToken({prompt: gcalCalId ? '' : 'consent'});
   }
 }
 
-function updateGcalBtn() {
+function updateGcalBtn(label=null) {
   const btn = document.getElementById('gcalSyncBtn');
   if(!btn) return;
+  if(label){ btn.textContent=label; return; }
   if(gcalToken){
     btn.textContent = '✅ 캘린더 연동됨';
     btn.classList.add('connected');
-    btn.title = '클릭하면 연동 해제';
+    btn.title = '🌿 leaflyene 운영플래너 캘린더에 연동 중\n클릭하면 연동 해제';
   } else {
     btn.textContent = '🔗 구글 캘린더 연동';
     btn.classList.remove('connected');
-    btn.title = '클릭해서 구글 캘린더와 실시간 연동';
+    btn.title = '클릭해서 구글 캘린더와 실시간 연동 (전용 캘린더 자동 생성)';
   }
 }
 
 function gcalEndDate(dateStr) {
-  // Google Calendar end date is exclusive — add 1 day
   const d = new Date(dateStr + 'T00:00:00');
   d.setDate(d.getDate() + 1);
   return d.toISOString().split('T')[0];
@@ -1351,9 +1400,9 @@ function gcalEndDate(dateStr) {
 function gcalBody(t) {
   const cats = taskCats(t).map(id=>catById(id).name).join(', ');
   let desc = '';
-  if(cats)   desc += `분류: ${cats}\n`;
-  if(t.note) desc += `메모: ${t.note}\n`;
-  if(t.link) desc += `링크: ${t.link}`;
+  if(cats)   desc += `[분류] ${cats}\n`;
+  if(t.note) desc += `\n${t.note}`;
+  if(t.link) desc += `\n\n🔗 ${t.link}`;
   const s = t.startDate || t.endDate || new Date().toISOString().split('T')[0];
   const e = t.endDate   || t.startDate || s;
   return {
@@ -1377,25 +1426,25 @@ async function gcalRequest(method, url, body=null) {
 }
 
 async function gcalCreateEvent(t) {
-  if(!gcalToken) return;
+  if(!gcalToken || !gcalCalId) return;
   try {
-    const res = await gcalRequest('POST', GCAL_API, gcalBody(t));
+    const res = await gcalRequest('POST', gcalEventsUrl(), gcalBody(t));
     if(res?.ok){ const data=await res.json(); t.gcalEventId=data.id; saveTasks(); }
   } catch(e){ console.warn('GCal create:', e); }
 }
 
 async function gcalUpdateEvent(t) {
-  if(!gcalToken) return;
+  if(!gcalToken || !gcalCalId) return;
   if(!t.gcalEventId){ await gcalCreateEvent(t); return; }
   try {
-    const res = await gcalRequest('PATCH', `${GCAL_API}/${t.gcalEventId}`, gcalBody(t));
+    const res = await gcalRequest('PATCH', gcalEventsUrl(t.gcalEventId), gcalBody(t));
     if(res?.status===404){ t.gcalEventId=null; await gcalCreateEvent(t); }
   } catch(e){ console.warn('GCal update:', e); }
 }
 
 async function gcalDeleteEvent(t) {
-  if(!gcalToken || !t.gcalEventId) return;
-  try { await gcalRequest('DELETE', `${GCAL_API}/${t.gcalEventId}`); }
+  if(!gcalToken || !gcalCalId || !t.gcalEventId) return;
+  try { await gcalRequest('DELETE', gcalEventsUrl(t.gcalEventId)); }
   catch(e){ console.warn('GCal delete:', e); }
 }
 
