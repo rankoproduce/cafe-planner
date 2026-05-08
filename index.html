@@ -381,6 +381,34 @@
     .guide-ft-nav{display:flex;gap:8px;}
     .guide-pg{font-size:11px;color:var(--muted);}
 
+    /* Urgency section */
+    .urgency-wrap{margin-bottom:14px;}
+    .urgency-block{border-radius:11px;overflow:hidden;margin-bottom:8px;}
+    .urgency-block.over{border:2px solid #e74c3c;background:#fff5f5;}
+    .urgency-block.soon{border:2px solid #e67e22;background:#fffbf5;}
+    .urgency-hd{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:12px;font-weight:800;cursor:pointer;user-select:none;}
+    .urgency-block.over .urgency-hd{background:#fdecea;color:#c0392b;}
+    .urgency-block.soon .urgency-hd{background:#fef3e2;color:#a04000;}
+    .urgency-hd-cnt{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;border-radius:11px;font-size:11px;font-weight:800;padding:0 6px;}
+    .urgency-block.over .urgency-hd-cnt{background:#e74c3c;color:#fff;}
+    .urgency-block.soon .urgency-hd-cnt{background:#e67e22;color:#fff;}
+    .urgency-hd-arr{margin-left:auto;font-size:11px;transition:transform .2s;}
+    .urgency-hd.open .urgency-hd-arr{transform:rotate(180deg);}
+    .urgency-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:7px;padding:8px 10px 10px;}
+    .urgency-card{display:flex;align-items:flex-start;gap:9px;padding:10px 12px;background:#fff;border-radius:9px;border:1.5px solid;cursor:default;position:relative;overflow:hidden;}
+    .urgency-block.over .urgency-card{border-color:#f5b7b1;}
+    .urgency-block.soon .urgency-card{border-color:#f5cba7;}
+    .urgency-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;}
+    .urgency-block.over .urgency-card::before{background:#e74c3c;}
+    .urgency-block.soon .urgency-card::before{background:#e67e22;}
+    .urgency-card-body{flex:1;min-width:0;padding-left:4px;}
+    .urgency-card-title{font-size:12px;font-weight:800;color:var(--text);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .urgency-card-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+    .urgency-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap;}
+    .urgency-block.over .urgency-badge{background:#fdecea;color:#c0392b;}
+    .urgency-block.soon .urgency-badge{background:#fef3e2;color:#a04000;}
+    .urgency-card-acts{display:flex;gap:3px;flex-shrink:0;align-items:flex-start;}
+
     /* Link collection modal */
     .links-ov{position:fixed;inset:0;background:rgba(44,26,14,.52);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:24px 20px;overflow-y:auto;}
     .links-ov.open{display:flex;}
@@ -448,7 +476,6 @@
   <div class="h-links">
     <a class="h-link-tab" href="https://drive.google.com/drive/folders/1eWjj0spaI5T-ReWc0rF6qxF9RjiwadSK?usp=sharing" target="_blank" rel="noopener">📝 회의록</a>
     <a class="h-link-tab" href="https://drive.google.com/drive/folders/1MqUhXcPbL9Qqvu5fCe5LLeqPaxK7mKg8?usp=sharing" target="_blank" rel="noopener">📁 구글드라이브</a>
-    <a class="h-link-tab" href="https://rankoproduce.notion.site/32fba6da608a8000a287e68f73884aec?source=copy_link" target="_blank" rel="noopener">📓 노션</a>
     <a class="h-link-tab" href="https://theranko.slack.com/archives/C0ARA19JX43" target="_blank" rel="noopener">💬 슬랙</a>
     <div class="h-link-sep"></div>
     <button class="h-link-tab" onclick="openLinks()">🔗 링크 모음</button>
@@ -572,6 +599,7 @@
           </div>
           <div class="ftab-row" id="ftabRow" style="margin:0;flex:2;"></div>
         </div>
+        <div id="urgencySection"></div>
         <div class="task-wide-grid" id="taskList"></div>
       </div>
     </div>
@@ -2097,6 +2125,87 @@ function renderStats() {
 }
 
 // ═══════════════════════════════════════════════════════
+// Render: Urgency section (기간 초과 / 임박 업무)
+// ═══════════════════════════════════════════════════════
+function dayDiff(t) {
+  const end = t.endDate || t.startDate;
+  if(!end) return null;
+  return Math.round((pd(end) - today) / 86400000);
+}
+
+function urgencyCardHTML(t, type) {
+  const diff = dayDiff(t);
+  let badge = '';
+  if(type === 'over') badge = `D+${Math.abs(diff)}일 초과`;
+  else badge = diff === 0 ? 'D-DAY' : `D-${diff}`;
+  const cats = catsHTML(t);
+  const parentT = t.parentId ? tasks.find(x => x.id === t.parentId) : null;
+  return `
+    <div class="urgency-card">
+      <div class="urgency-card-body">
+        <div class="urgency-card-title" title="${esc(t.title)}">${esc(t.title)}</div>
+        <div class="urgency-card-meta">
+          <span class="urgency-badge">${badge}</span>
+          ${cats}
+          ${parentT ? `<span style="font-size:10px;color:var(--muted);">↳ ${esc(parentT.title)}</span>` : ''}
+          ${t.note ? `<span style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;">${esc(t.note)}</span>` : ''}
+        </div>
+      </div>
+      <div class="urgency-card-acts">
+        <button class="btn btn-ic btn-teal" onclick="openEdit(${t.id})" title="수정">✏️</button>
+        <div class="chk ${t.done?'on':''}" onclick="toggle(${t.id})" title="완료 처리" style="width:20px;height:20px;font-size:10px;cursor:pointer;flex-shrink:0;">${t.done?'✓':''}</div>
+      </div>
+    </div>`;
+}
+
+function toggleUrgencyBlock(id) {
+  const hd = document.querySelector(`#${id} .urgency-hd`);
+  const bd = document.querySelector(`#${id} .urgency-cards`);
+  if(hd && bd) { hd.classList.toggle('open'); bd.style.display = bd.style.display === 'none' ? '' : 'none'; }
+}
+
+function renderUrgency() {
+  const el = document.getElementById('urgencySection');
+  if(!el) return;
+
+  const overTasks = tasks.filter(t => !t.done && dStatus(t) === 'over')
+    .sort((a,b) => (dayDiff(a)||0) - (dayDiff(b)||0)); // 가장 많이 초과한 순
+  const soonTasks = tasks.filter(t => !t.done && dStatus(t) === 'soon')
+    .sort((a,b) => (dayDiff(a)||0) - (dayDiff(b)||0)); // D-day 가까운 순
+
+  if(!overTasks.length && !soonTasks.length) { el.innerHTML = ''; return; }
+
+  let html = '<div class="urgency-wrap">';
+
+  if(overTasks.length) {
+    html += `
+    <div class="urgency-block over" id="urg-over">
+      <div class="urgency-hd open" onclick="toggleUrgencyBlock('urg-over')">
+        🚨 기간 초과 업무
+        <span class="urgency-hd-cnt">${overTasks.length}</span>
+        <span class="urgency-hd-arr">▾</span>
+      </div>
+      <div class="urgency-cards">${overTasks.map(t=>urgencyCardHTML(t,'over')).join('')}</div>
+    </div>`;
+  }
+
+  if(soonTasks.length) {
+    html += `
+    <div class="urgency-block soon" id="urg-soon">
+      <div class="urgency-hd open" onclick="toggleUrgencyBlock('urg-soon')">
+        🔥 마감 임박 업무 (3일 이내)
+        <span class="urgency-hd-cnt">${soonTasks.length}</span>
+        <span class="urgency-hd-arr">▾</span>
+      </div>
+      <div class="urgency-cards">${soonTasks.map(t=>urgencyCardHTML(t,'soon')).join('')}</div>
+    </div>`;
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════
 // Render: Task list (left panel, flat — no hierarchy)
 // ═══════════════════════════════════════════════════════
 function renderTasks() {
@@ -2367,6 +2476,7 @@ function renderWeekly() {
 function renderAll() {
   renderStats();
   renderFilterTabs();
+  renderUrgency();
   renderTasks();
   renderCal();
   renderWeekly();
