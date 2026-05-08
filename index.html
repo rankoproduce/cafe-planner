@@ -381,6 +381,33 @@
     .guide-ft-nav{display:flex;gap:8px;}
     .guide-pg{font-size:11px;color:var(--muted);}
 
+    /* Link collection modal */
+    .links-ov{position:fixed;inset:0;background:rgba(44,26,14,.52);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:24px 20px;overflow-y:auto;}
+    .links-ov.open{display:flex;}
+    .links-box{background:var(--white);border-radius:16px;box-shadow:var(--sh-lg);width:100%;max-width:680px;overflow:hidden;margin:auto;}
+    .links-hd{background:var(--br-dk);color:#fff;padding:18px 24px;display:flex;align-items:center;gap:12px;}
+    .links-hd-icon{font-size:24px;}
+    .links-hd-text{flex:1;}
+    .links-hd-text h2{font-size:16px;font-weight:800;margin-bottom:2px;}
+    .links-hd-text p{font-size:11px;opacity:.68;}
+    .links-body{padding:20px 24px;max-height:65vh;overflow-y:auto;}
+    .links-body::-webkit-scrollbar{width:4px;}
+    .links-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+    .links-empty{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+    .links-cat-section{margin-bottom:20px;}
+    .links-cat-title{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:5px 0;border-bottom:2px solid var(--border);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+    .links-cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .links-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;margin-bottom:7px;background:#fff;transition:all .18s;}
+    .links-item:hover{border-color:var(--br-lt);box-shadow:var(--sh);background:var(--cream);}
+    .links-item-info{flex:1;min-width:0;}
+    .links-item-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .links-item-url{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .links-item-done .links-item-title{text-decoration:line-through;opacity:.5;}
+    .links-open-btn{flex-shrink:0;display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:8px;background:var(--br);color:#fff;font-size:11px;font-weight:700;text-decoration:none;transition:background .15s;white-space:nowrap;}
+    .links-open-btn:hover{background:var(--br-dk);}
+    .links-ft{padding:14px 24px;border-top:1px solid var(--border);background:var(--cream);display:flex;justify-content:space-between;align-items:center;}
+    .links-count{font-size:11px;color:var(--muted);}
+
     /* Toast notification */
     .toast-wrap{position:fixed;bottom:28px;right:28px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
     .toast{padding:10px 16px;border-radius:10px;font-size:12px;font-weight:700;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.22);opacity:0;transform:translateY(10px);transition:all .28s ease;pointer-events:none;max-width:280px;line-height:1.5;}
@@ -423,6 +450,8 @@
     <a class="h-link-tab" href="https://drive.google.com/drive/folders/1MqUhXcPbL9Qqvu5fCe5LLeqPaxK7mKg8?usp=sharing" target="_blank" rel="noopener">📁 구글드라이브</a>
     <a class="h-link-tab" href="https://rankoproduce.notion.site/32fba6da608a8000a287e68f73884aec?source=copy_link" target="_blank" rel="noopener">📓 노션</a>
     <a class="h-link-tab" href="https://theranko.slack.com/archives/C0ARA19JX43" target="_blank" rel="noopener">💬 슬랙</a>
+    <div class="h-link-sep"></div>
+    <button class="h-link-tab" onclick="openLinks()">🔗 링크 모음</button>
     <div class="h-link-sep"></div>
     <button class="gcal-sync-btn" id="gcalSyncBtn" onclick="gcalToggleAuth()">🔗 구글 캘린더 연동</button>
     <button class="gcal-sync-btn" id="gcalResyncBtn" onclick="gcalSyncAll()" style="display:none;" title="전체 업무를 전용 캘린더에 다시 동기화">🔄 전체 재동기화</button>
@@ -666,7 +695,7 @@
       <span class="guide-hd-icon">📖</span>
       <div class="guide-hd-text">
         <h2>leaflyene house 운영플래너 사용 가이드</h2>
-        <p>처음 사용하시나요? 각 탭을 클릭해 기능별 사용법을 확인하세요.</p>
+        <p>각 탭을 클릭해 기능별 사용법을 확인하세요.</p>
       </div>
       <button class="guide-close" onclick="closeGuide()">✕</button>
     </div>
@@ -679,7 +708,8 @@
       <button class="guide-tab" onclick="showGuide(5,this)">📊 타임라인</button>
       <button class="guide-tab" onclick="showGuide(6,this)">🗓 주간 업무</button>
       <button class="guide-tab" onclick="showGuide(7,this)">📋 업무 목록</button>
-      <button class="guide-tab" onclick="showGuide(8,this)">✏️ 수정 &amp; 삭제</button>
+      <button class="guide-tab" onclick="showGuide(8,this)">🔗 링크 모음</button>
+      <button class="guide-tab" onclick="showGuide(9,this)">🔥 동기화 &amp; 연동</button>
     </div>
     <div class="guide-body">
 
@@ -689,7 +719,7 @@
           <span class="guide-hero-icon">🚀</span>
           <div>
             <h3>3단계로 바로 시작하기</h3>
-            <p>처음 사용한다면 아래 순서대로 따라해 보세요. 5분이면 기본 세팅이 완료됩니다.</p>
+            <p>URL에 접속하면 모든 팀원이 동일한 데이터를 실시간으로 공유합니다. 별도 설치나 로그인 없이 바로 사용할 수 있습니다.</p>
           </div>
         </div>
         <div class="guide-steps">
@@ -697,20 +727,20 @@
             <div class="guide-step-n">1</div>
             <div class="guide-step-body">
               <strong>분류(카테고리)를 먼저 만드세요</strong>
-              <p>왼쪽 업무 추가 폼 상단의 <span class="guide-tag">⚙ 분류 관리</span> 버튼을 클릭해 메뉴, 마케팅, 인사 등 자신의 업무에 맞는 분류를 추가합니다. 기본 분류 7개가 이미 만들어져 있으니 그대로 사용해도 됩니다.</p>
+              <p>왼쪽 업무 추가 폼 상단의 <span class="guide-tag">⚙ 분류 관리</span> 버튼을 클릭해 메뉴, 마케팅, 인사 등 업무에 맞는 분류를 추가합니다. 기본 분류 7개가 이미 만들어져 있으니 그대로 사용해도 됩니다.</p>
             </div>
           </div>
           <div class="guide-step">
             <div class="guide-step-n">2</div>
             <div class="guide-step-body">
               <strong>업무를 추가하세요</strong>
-              <p>왼쪽 <span class="guide-tag">✚ 업무 추가</span> 패널에서 업무 제목을 입력하고, 분류와 기간을 선택한 뒤 <span class="guide-tag">✚ 추가하기</span> 버튼을 누릅니다. 기간을 입력하면 캘린더와 타임라인에 자동으로 표시됩니다.</p>
+              <p>왼쪽 <span class="guide-tag">✚ 업무 추가</span> 패널에서 업무 제목을 입력하고, 분류와 기간을 선택한 뒤 <span class="guide-tag">✚ 추가하기</span>를 누릅니다. 추가 즉시 전체 팀원 화면에 반영됩니다.</p>
             </div>
           </div>
           <div class="guide-step">
             <div class="guide-step-n">3</div>
             <div class="guide-step-body">
-              <strong>캘린더 또는 타임라인으로 일정을 확인하세요</strong>
+              <strong>캘린더·타임라인으로 일정을 확인하세요</strong>
               <p>가운데 패널 상단의 <span class="guide-tag">캘린더</span> / <span class="guide-tag">타임라인</span> 버튼으로 뷰를 전환합니다. 캘린더는 날짜별, 타임라인은 월간 Gantt 차트로 업무를 확인할 수 있습니다.</p>
             </div>
           </div>
@@ -721,9 +751,9 @@
           <div class="guide-kv-row"><span class="guide-kv-key">가운데 패널</span><span class="guide-kv-val">캘린더 / 타임라인 뷰 — 일정 전체를 시각적으로 확인</span></div>
           <div class="guide-kv-row"><span class="guide-kv-key">오른쪽 패널</span><span class="guide-kv-val">주간 업무 — 이번 주 7일간의 업무 목록</span></div>
           <div class="guide-kv-row"><span class="guide-kv-key">하단 전체</span><span class="guide-kv-val">업무 목록 — 전체 업무를 분류별로 필터링해 확인</span></div>
-          <div class="guide-kv-row"><span class="guide-kv-key">상단 헤더</span><span class="guide-kv-val">전체 / 완료 / 초과 / 진행률 통계를 항상 표시</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">상단 헤더</span><span class="guide-kv-val">전체 / 완료 / 초과 / 진행률 통계 + 팀 바로가기 링크</span></div>
         </div>
-        <div class="guide-tip"><strong>💾 자동 저장:</strong> 모든 데이터는 이 브라우저에 자동으로 저장됩니다. 별도 로그인 없이 다음에 열어도 그대로 유지됩니다.</div>
+        <div class="guide-tip"><strong>🔥 실시간 공유:</strong> Firebase 기반으로 누가 업무를 추가·수정·삭제하면 같은 URL을 열고 있는 모든 팀원 화면에 1초 이내에 자동 반영됩니다.</div>
       </div>
 
       <!-- 1: 업무 추가 -->
@@ -740,7 +770,7 @@
           <div class="guide-kv-row"><span class="guide-kv-key">분류</span><span class="guide-kv-val">색상 칩을 클릭해 분류를 선택합니다. 여러 개 동시에 선택 가능합니다.</span></div>
           <div class="guide-kv-row"><span class="guide-kv-key">기간 (시작 ~ 마감)</span><span class="guide-kv-val">날짜를 입력하면 캘린더와 타임라인에 자동 표시됩니다. 하루짜리 업무는 시작일만 입력해도 됩니다.</span></div>
           <div class="guide-kv-row"><span class="guide-kv-key">상위 업무</span><span class="guide-kv-val">기존 업무의 하위 항목으로 만들고 싶을 때 선택합니다. 선택하지 않으면 독립 업무로 등록됩니다.</span></div>
-          <div class="guide-kv-row"><span class="guide-kv-key">참고 링크</span><span class="guide-kv-val">관련 URL을 붙여넣으면 업무 카드에서 바로 열 수 있습니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">참고 링크</span><span class="guide-kv-val">관련 URL을 붙여넣으면 업무 카드와 링크 모음에서 바로 열 수 있습니다.</span></div>
           <div class="guide-kv-row"><span class="guide-kv-key">메모</span><span class="guide-kv-val">업무에 대한 추가 설명이나 체크리스트를 자유롭게 입력합니다.</span></div>
         </div>
         <div class="guide-tip"><strong>💡 빠른 추가:</strong> 캘린더에서 날짜를 클릭하면 그 날짜가 자동으로 입력된 업무 추가 폼이 팝업으로 열립니다. 특정 날짜 업무를 빠르게 등록할 때 유용합니다.</div>
@@ -782,7 +812,7 @@
           <div class="guide-kv-row"><span class="guide-kv-key">타임라인 표시</span><span class="guide-kv-val">하위 업무는 상위 업무 바로 아래에 들여쓰기(└)와 연한 배경으로 표시됩니다.</span></div>
           <div class="guide-kv-row"><span class="guide-kv-key">정렬 우선순위</span><span class="guide-kv-val">하위 업무가 있는 상위 업무가 목록 상단에 먼저 표시됩니다.</span></div>
         </div>
-        <div class="guide-tip"><strong>💡 팁:</strong> 하위 업무는 1단계까지만 지원합니다 (하위의 하위는 없습니다). 프로젝트 → 세부 작업 단위로 구성하는 것을 추천합니다.</div>
+        <div class="guide-tip"><strong>💡 팁:</strong> 하위 업무는 1단계까지만 지원합니다. 프로젝트 → 세부 작업 단위로 구성하는 것을 추천합니다.</div>
       </div>
 
       <!-- 3: 분류 관리 -->
@@ -817,7 +847,7 @@
             </div>
           </div>
         </div>
-        <div class="guide-warn">⚠️ <strong>주의:</strong> 분류를 삭제하면 해당 분류가 설정된 모든 업무에서 분류 정보가 제거됩니다. 분류를 아예 없애는 것이 아니라 이름/색상만 바꾸려면 수정을 이용하세요.</div>
+        <div class="guide-warn">⚠️ <strong>주의:</strong> 분류 변경은 모든 팀원에게 즉시 반영됩니다. 분류를 삭제하면 해당 분류가 설정된 모든 업무에서 분류 정보가 제거됩니다.</div>
       </div>
 
       <!-- 4: 캘린더 -->
@@ -836,7 +866,7 @@
           <div class="guide-kv-row"><span class="guide-kv-key">색상 점(dot)</span><span class="guide-kv-val">날짜 셀 아래 작은 점이 해당 날 업무의 분류 색상을 나타냅니다.</span></div>
           <div class="guide-kv-row"><span class="guide-kv-key">오늘 표시</span><span class="guide-kv-val">오늘 날짜 셀은 커피색 테두리로 강조됩니다.</span></div>
         </div>
-        <div class="guide-tip"><strong>💡 팁:</strong> 캘린더 날짜 팝업의 오른쪽 폼에서 날짜가 자동으로 채워진 채로 업무를 추가할 수 있어, 일정 기반으로 등록할 때 가장 빠릅니다.</div>
+        <div class="guide-tip"><strong>💡 팁:</strong> 날짜 팝업 오른쪽 폼에서 날짜가 자동 입력된 채로 업무를 추가할 수 있어 일정 기반 등록에 가장 빠릅니다.</div>
       </div>
 
       <!-- 5: 타임라인 -->
@@ -853,9 +883,9 @@
           <div class="guide-kv-row"><span class="guide-kv-key">월 이동</span><span class="guide-kv-val">제목 좌우 ‹ › 버튼으로 이전/다음 달로 이동합니다.</span></div>
           <div class="guide-kv-row"><span class="guide-kv-key">막대 클릭</span><span class="guide-kv-val">Gantt 막대를 클릭하면 해당 업무의 수정 팝업이 열립니다.</span></div>
           <div class="guide-kv-row"><span class="guide-kv-key">가로 스크롤</span><span class="guide-kv-val">Gantt 막대 영역만 가로로 스크롤되고, 왼쪽 업무명 목록은 고정됩니다.</span></div>
-          <div class="guide-kv-row"><span class="guide-kv-key">정렬 순서</span><span class="guide-kv-val">하위 업무가 있는 상위 업무 → 단독 업무 순으로, 각 그룹 내에서는 시작일 오름차순 정렬됩니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">정렬 순서</span><span class="guide-kv-val">하위 업무가 있는 상위 업무 → 단독 업무 순으로, 시작일 오름차순 정렬됩니다.</span></div>
           <div class="guide-kv-row"><span class="guide-kv-key">날짜 미정</span><span class="guide-kv-val">기간이 없는 업무는 목록 하단 "날짜 미정" 구역에 모아서 표시됩니다.</span></div>
-          <div class="guide-kv-row"><span class="guide-kv-key">하위 업무 추가</span><span class="guide-kv-val">왼쪽 업무명에 마우스를 올리면 나타나는 <strong>+</strong> 버튼을 클릭해 하위 업무를 바로 만들 수 있습니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">하위 업무 추가</span><span class="guide-kv-val">왼쪽 업무명에 마우스를 올리면 나타나는 <strong>+</strong> 버튼으로 하위 업무를 바로 만들 수 있습니다.</span></div>
         </div>
         <div class="guide-tip"><strong>💡 팁:</strong> 타임라인으로 전환해도 하단 업무 목록과 주간 패널은 그대로 표시됩니다.</div>
       </div>
@@ -875,65 +905,100 @@
           <div class="guide-kv-row"><span class="guide-kv-key">표시 기준</span><span class="guide-kv-val">해당 주의 날짜 범위 안에 포함되는 업무가 요일별로 정렬되어 표시됩니다.</span></div>
           <div class="guide-kv-row"><span class="guide-kv-key">완료 업무</span><span class="guide-kv-val">완료 처리된 업무는 취소선과 함께 흐리게 표시됩니다.</span></div>
         </div>
-        <div class="guide-tip"><strong>💡 팁:</strong> 주간 패널은 1100px 이하 화면에서는 자동으로 숨겨집니다. 넓은 화면에서 사용할 때 가장 유용합니다.</div>
+        <div class="guide-tip"><strong>💡 팁:</strong> 주간 패널은 1100px 이하 화면에서는 자동으로 숨겨집니다. 넓은 화면에서 가장 유용합니다.</div>
       </div>
 
-      <!-- 7: 업무 목록 -->
+      <!-- 7: 업무 목록 & 수정 -->
       <div class="guide-section" id="gs7">
         <div class="guide-hero">
           <span class="guide-hero-icon">📋</span>
           <div>
-            <h3>업무 목록 &amp; 필터</h3>
-            <p>화면 하단 전체 폭 섹션에서 모든 업무를 한눈에 보고 분류별로 필터링합니다.</p>
+            <h3>업무 목록 · 수정 · 삭제</h3>
+            <p>화면 하단에서 모든 업무를 필터링하고, 카드를 클릭해 수정·삭제합니다.</p>
           </div>
         </div>
         <div class="guide-kv">
           <div class="guide-kv-row"><span class="guide-kv-key">진행률 바</span><span class="guide-kv-val">전체 업무 중 완료된 비율을 퍼센트와 막대로 표시합니다.</span></div>
-          <div class="guide-kv-row"><span class="guide-kv-key">분류 필터</span><span class="guide-kv-val">진행률 옆 탭 버튼으로 특정 분류만 필터링해 볼 수 있습니다. <span class="guide-tag">전체</span> 탭으로 전체 목록을 표시합니다.</span></div>
-          <div class="guide-kv-row"><span class="guide-kv-key">업무 카드 클릭</span><span class="guide-kv-val">카드를 클릭하면 수정 팝업이 열립니다.</span></div>
-          <div class="guide-kv-row"><span class="guide-kv-key">완료 토글</span><span class="guide-kv-val">카드 왼쪽 체크 아이콘을 클릭해 완료/미완료를 전환합니다. 완료된 업무는 흐리게 표시됩니다.</span></div>
-          <div class="guide-kv-row"><span class="guide-kv-key">링크 아이콘</span><span class="guide-kv-val">참고 링크가 있는 업무는 카드에 링크 버튼이 표시됩니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">분류 필터</span><span class="guide-kv-val">상단 탭 버튼으로 특정 분류만 필터링합니다. <span class="guide-tag">전체</span> 탭으로 전체 목록을 봅니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">완료 토글</span><span class="guide-kv-val">카드 왼쪽 체크 아이콘으로 완료/미완료를 전환합니다. 완료된 업무는 흐리게 표시됩니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">수정 팝업</span><span class="guide-kv-val">카드 또는 타임라인 막대를 클릭하면 제목·분류·기간·링크·메모를 모두 수정할 수 있는 팝업이 열립니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">삭제</span><span class="guide-kv-val">수정 팝업 하단 삭제 버튼을 누릅니다. 삭제는 복구되지 않으며, 모든 팀원에게 즉시 반영됩니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">링크 버튼</span><span class="guide-kv-val">참고 링크가 있는 업무는 카드에 링크 버튼이 표시되어 바로 열 수 있습니다.</span></div>
         </div>
+        <div class="guide-warn">⚠️ <strong>삭제 주의:</strong> 상위 업무를 삭제해도 하위 업무는 삭제되지 않습니다. 하위 업무 연결이 끊어진 채 독립 업무로 남습니다.</div>
       </div>
 
-      <!-- 8: 수정 & 삭제 -->
+      <!-- 8: 링크 모음 -->
       <div class="guide-section" id="gs8">
         <div class="guide-hero">
-          <span class="guide-hero-icon">✏️</span>
+          <span class="guide-hero-icon">🔗</span>
           <div>
-            <h3>업무 수정 &amp; 삭제</h3>
-            <p>등록된 업무의 모든 항목을 수정하거나 삭제할 수 있습니다.</p>
+            <h3>링크 모음</h3>
+            <p>참고 링크가 등록된 업무를 한 곳에서 모아 봅니다. 관련 자료를 빠르게 찾을 때 유용합니다.</p>
           </div>
         </div>
         <div class="guide-steps">
           <div class="guide-step">
             <div class="guide-step-n">1</div>
             <div class="guide-step-body">
-              <strong>수정 팝업 열기</strong>
-              <p>하단 업무 목록의 카드를 클릭하거나, 타임라인에서 Gantt 막대를 클릭하면 수정 팝업이 열립니다.</p>
+              <strong>상단 바의 <span class="guide-tag">🔗 링크 모음</span> 버튼 클릭</strong>
+              <p>링크가 등록된 업무 전체를 분류별로 정리한 모달이 열립니다.</p>
             </div>
           </div>
           <div class="guide-step">
             <div class="guide-step-n">2</div>
             <div class="guide-step-body">
-              <strong>내용 수정 후 저장</strong>
-              <p>제목, 분류, 기간, 상위 업무, 링크, 메모를 자유롭게 수정한 뒤 <span class="guide-tag">저장</span> 버튼을 누릅니다.</p>
+              <strong>분류별 링크 확인</strong>
+              <p>링크는 업무 분류(카테고리)별로 그룹화되어 표시됩니다. 각 항목에는 업무명과 링크 도메인이 보입니다.</p>
             </div>
           </div>
           <div class="guide-step">
             <div class="guide-step-n">3</div>
             <div class="guide-step-body">
-              <strong>완료 처리 / 삭제</strong>
-              <p>수정 팝업 하단에서 완료 토글 또는 삭제 버튼을 사용합니다. 삭제는 복구되지 않으니 주의하세요.</p>
+              <strong><span class="guide-tag">열기 ↗</span> 버튼으로 바로 이동</strong>
+              <p>항목 오른쪽 열기 버튼을 클릭하면 해당 링크가 새 탭에서 열립니다.</p>
             </div>
           </div>
         </div>
-        <div class="guide-warn">⚠️ <strong>삭제 주의:</strong> 상위 업무를 삭제해도 하위 업무는 삭제되지 않습니다. 하위 업무는 상위 업무 연결이 끊어진 채 독립 업무로 남습니다.</div>
+        <div class="guide-kv">
+          <div class="guide-kv-row"><span class="guide-kv-key">링크 추가 방법</span><span class="guide-kv-val">업무 추가 또는 수정 팝업의 <strong>참고 링크</strong> 항목에 URL을 입력하면 자동으로 링크 모음에 포함됩니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">완료된 업무</span><span class="guide-kv-val">완료 처리된 업무의 링크는 업무명에 취소선이 표시됩니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">상단 바로가기</span><span class="guide-kv-val">상단 헤더의 📝 회의록 / 📁 구글드라이브 / 📓 노션 / 💬 슬랙 탭으로 팀 공용 문서에 빠르게 접근할 수 있습니다.</span></div>
+        </div>
+        <div class="guide-tip"><strong>💡 팁:</strong> 업무마다 링크를 넣어두면 "그 자료 어디 있더라?" 를 찾아 헤맬 필요 없이 링크 모음에서 바로 찾을 수 있습니다.</div>
+      </div>
+
+      <!-- 9: 동기화 & 연동 -->
+      <div class="guide-section" id="gs9">
+        <div class="guide-hero">
+          <span class="guide-hero-icon">🔥</span>
+          <div>
+            <h3>실시간 동기화 &amp; 구글 캘린더 연동</h3>
+            <p>Firebase로 팀 전체 실시간 공유, 구글 캘린더로 개인 일정까지 관리합니다.</p>
+          </div>
+        </div>
+        <div class="guide-kv">
+          <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🔥 Firebase 실시간 동기화</div>
+          <div class="guide-kv-row"><span class="guide-kv-key">작동 방식</span><span class="guide-kv-val">URL 접속 즉시 Firebase에서 최신 데이터를 자동으로 불러옵니다. 별도 로그인이 필요 없습니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">실시간 반영</span><span class="guide-kv-val">누군가 업무를 추가·수정·삭제하면 같은 URL을 열고 있는 모든 화면에 1초 이내로 자동 반영됩니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">동기화 배지</span><span class="guide-kv-val">상단 헤더의 <strong>🔥 실시간 동기화</strong> 배지가 켜져 있으면 정상 동기화 중입니다.</span></div>
+        </div>
+        <div style="margin:14px 0 10px;border-top:1px solid var(--border);padding-top:14px;">
+          <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">📅 구글 캘린더 연동</div>
+        </div>
+        <div class="guide-kv">
+          <div class="guide-kv-row"><span class="guide-kv-key">최초 연동</span><span class="guide-kv-val">상단 <span class="guide-tag">🔗 구글 캘린더 연동</span> 버튼 클릭 → 구글 계정으로 로그인 → <strong>🌿 leaflyene 운영플래너</strong> 전용 캘린더가 자동 생성되고 모든 업무가 동기화됩니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">자동 재연결</span><span class="guide-kv-val">한 번 연동하면 다음 방문 시 버튼을 누르지 않아도 자동으로 재연결됩니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">실시간 업데이트</span><span class="guide-kv-val">업무를 추가·수정·삭제하면 구글 캘린더에도 자동으로 반영됩니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">전체 재동기화</span><span class="guide-kv-val">연동 후 나타나는 <span class="guide-tag">🔄 전체 재동기화</span> 버튼으로 모든 업무를 캘린더에 다시 동기화할 수 있습니다.</span></div>
+          <div class="guide-kv-row"><span class="guide-kv-key">연동 해제</span><span class="guide-kv-val"><span class="guide-tag">✅ 구글 연동됨</span> 버튼을 다시 클릭하면 연동이 해제됩니다. 캘린더의 기존 일정은 삭제되지 않습니다.</span></div>
+        </div>
+        <div class="guide-tip"><strong>💡 팁:</strong> 구글 캘린더 연동은 개인별로 설정합니다. 팀원마다 각자의 구글 계정으로 연동하면 각자의 캘린더에 업무가 동기화됩니다.</div>
       </div>
 
     </div>
     <div class="guide-ft">
-      <span class="guide-pg" id="guidePg">1 / 9</span>
+      <span class="guide-pg" id="guidePg">1 / 10</span>
       <div class="guide-ft-nav">
         <button class="btn btn-ghost btn-ic" onclick="guideStep(-1)">‹ 이전</button>
         <button class="btn btn-br btn-ic" onclick="guideStep(1)">다음 ›</button>
@@ -957,6 +1022,25 @@
       <button class="btn btn-br btn-block" onclick="addCat()">✚ 분류 추가</button>
     </div>
     <div class="modal-ft"><button class="btn btn-ghost" onclick="closeCatMgr()">닫기</button></div>
+  </div>
+</div>
+
+<!-- 링크 모음 모달 -->
+<div class="links-ov" id="linksModal">
+  <div class="links-box">
+    <div class="links-hd">
+      <div class="links-hd-icon">🔗</div>
+      <div class="links-hd-text">
+        <h2>링크 모음</h2>
+        <p>링크가 등록된 업무 목록</p>
+      </div>
+      <button class="modal-close-btn" onclick="closeLinks()">✕</button>
+    </div>
+    <div class="links-body" id="linksBody"></div>
+    <div class="links-ft">
+      <span class="links-count" id="linksCount"></span>
+      <button class="btn btn-ghost" onclick="closeLinks()">닫기</button>
+    </div>
   </div>
 </div>
 
@@ -1323,6 +1407,86 @@ function openCatMgr() { renderCatList(); renderColorSwatches(); document.getElem
 function closeCatMgr() { document.getElementById('catModal').classList.remove('open'); renderAll(); }
 
 // ═══════════════════════════════════════════════════════
+// 링크 모음 모달
+// ═══════════════════════════════════════════════════════
+function openLinks() {
+  renderLinksModal();
+  document.getElementById('linksModal').classList.add('open');
+}
+function closeLinks() {
+  document.getElementById('linksModal').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if(e.target === document.getElementById('linksModal')) closeLinks();
+});
+
+function renderLinksModal() {
+  const body  = document.getElementById('linksBody');
+  const count = document.getElementById('linksCount');
+  if(!body) return;
+
+  // 링크 있는 업무만 추출
+  const linked = tasks.filter(t => t.link && t.link.trim());
+  if(!linked.length) {
+    body.innerHTML = `<div class="links-empty">🔍 링크가 등록된 업무가 없습니다.<br><span style="font-size:11px;margin-top:4px;display:block;">업무 추가 시 '참고 링크' 항목에 URL을 입력하면 여기에 모입니다.</span></div>`;
+    count.textContent = '';
+    return;
+  }
+
+  // 분류별로 그룹화 (분류 없는 것은 마지막에)
+  const grouped = {};
+  const UNGROUPED = '__none__';
+  linked.forEach(t => {
+    const cats = taskCats(t);
+    if(cats.length === 0) {
+      (grouped[UNGROUPED] = grouped[UNGROUPED] || []).push(t);
+    } else {
+      cats.forEach(catId => {
+        (grouped[catId] = grouped[catId] || []).push(t);
+      });
+    }
+  });
+
+  // 분류 순서: 카테고리 순 → 미분류
+  const sortedKeys = [
+    ...categories.map(c => c.id).filter(id => grouped[id]),
+    ...(grouped[UNGROUPED] ? [UNGROUPED] : [])
+  ];
+
+  let html = '';
+  sortedKeys.forEach(catId => {
+    const cat    = catId === UNGROUPED ? null : catById(catId);
+    const label  = cat ? `${cat.icon} ${esc(cat.name)}` : '기타';
+    const dotClr = cat ? cat.bg : 'var(--border)';
+    const items  = grouped[catId];
+
+    html += `<div class="links-cat-section">
+      <div class="links-cat-title">
+        <span class="links-cat-dot" style="background:${dotClr};"></span>
+        ${label}
+        <span style="margin-left:auto;font-size:10px;font-weight:600;color:var(--muted);">${items.length}개</span>
+      </div>`;
+
+    items.forEach(t => {
+      let domain = '';
+      try { domain = new URL(t.link).hostname.replace('www.',''); } catch(e){ domain = t.link; }
+      html += `<div class="links-item${t.done?' links-item-done':''}">
+        <div class="links-item-info">
+          <div class="links-item-title" title="${esc(t.title)}">${esc(t.title)}</div>
+          <div class="links-item-url" title="${esc(t.link)}">${esc(domain)}</div>
+        </div>
+        <a class="links-open-btn" href="${esc(t.link)}" target="_blank" rel="noopener">열기 ↗</a>
+      </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  body.innerHTML = html;
+  count.textContent = `총 ${linked.length}개 링크`;
+}
+
+// ═══════════════════════════════════════════════════════
 // Google Calendar — Real-time sync (전용 캘린더)
 // ═══════════════════════════════════════════════════════
 const GCAL_CLIENT_ID  = '22239193799-nhjsdkvoajcccifovf1leglhella8rpv.apps.googleusercontent.com';
@@ -1350,9 +1514,10 @@ let fbDb   = null;
 let _fbSaveTimer  = null;
 let _fbUpdating   = false; // 리스너 → 저장 → 리스너 무한루프 방지
 
-let gcalToken       = null;
-let gcalTokenClient = null;
-let gcalCalId       = localStorage.getItem(SK_GCAL_ID) || null;
+let gcalToken         = null;
+let gcalTokenClient   = null;
+let gcalCalId         = localStorage.getItem(SK_GCAL_ID) || null;
+let _gcalRefreshTimer = null; // 토큰 자동 갱신 타이머
 
 function gcalEventsUrl(eventId='') {
   const base = `${GCAL_BASE}/calendars/${encodeURIComponent(gcalCalId||'primary')}/events`;
@@ -1418,12 +1583,7 @@ function gcalInit() {
     scope: GCAL_SCOPE,
     callback: gcalOnToken,
   });
-  // 이전에 연동한 적 있으면 팝업 없이 자동 재연결
-  if(localStorage.getItem(SK_GCAL_AUTO) === '1') {
-    setTimeout(()=>{
-      gcalTokenClient.requestAccessToken({prompt: ''});
-    }, 800);
-  }
+  // 구글 캘린더 연동은 사용자가 직접 버튼을 눌러야만 실행 (자동 팝업 없음)
 }
 
 window.addEventListener('load', () => {
@@ -1433,12 +1593,19 @@ window.addEventListener('load', () => {
 
 async function gcalOnToken(resp) {
   if(resp.error){
-    // 자동 재연결 시 팝업 없이 실패하는 경우는 조용히 무시
     if(resp.error !== 'interaction_required') console.warn('GCal auth error:', resp);
+    gcalToken = null; updateGcalBtn();
     return;
   }
   gcalToken = resp.access_token;
-  localStorage.setItem(SK_GCAL_AUTO, '1'); // 다음 방문 시 자동 재연결
+
+  // 55분 후 자동 갱신 (토큰 유효기간 60분 — 페이지 열어두면 무한 유지)
+  clearTimeout(_gcalRefreshTimer);
+  _gcalRefreshTimer = setTimeout(() => {
+    if(gcalTokenClient) gcalTokenClient.requestAccessToken({prompt: ''});
+  }, 55 * 60 * 1000);
+
+  const isFirstConnect = !gcalCalId;
   updateGcalBtn('⏳ 캘린더 준비 중...');
 
   // 전용 구글 캘린더 준비
@@ -1450,14 +1617,17 @@ async function gcalOnToken(resp) {
 }
 
 // 전체 업무를 전용 캘린더에 순차 동기화
+// gcalEventId가 있으면 업데이트, 없으면 새로 생성 → 중복 방지
 async function gcalSyncAll() {
   if(!gcalToken || !gcalCalId) return;
   updateGcalBtn('⏳ 동기화 중...');
-  tasks.forEach(t=>{ t.gcalEventId=null; });
-  saveTasks();
   let done=0;
   for(const t of tasks) {
-    await gcalCreateEvent(t);
+    if(t.gcalEventId) {
+      await gcalUpdateEvent(t); // 기존 일정 업데이트
+    } else {
+      await gcalCreateEvent(t); // 신규 일정 생성
+    }
     done++;
     updateGcalBtn(`⏳ ${done}/${tasks.length} 동기화 중...`);
   }
@@ -1503,7 +1673,8 @@ function gcalToggleAuth() {
     if(!confirm('구글 캘린더 연동을 해제하시겠습니까?\n(캘린더 일정은 삭제되지 않습니다)')) return;
     google.accounts.oauth2.revoke(gcalToken, ()=>{});
     gcalToken = null;
-    localStorage.removeItem(SK_GCAL_AUTO); // 자동 재연결 해제
+    clearTimeout(_gcalRefreshTimer);
+    localStorage.removeItem(SK_GCAL_AUTO);
     updateGcalBtn();
   } else {
     if(!gcalTokenClient){ alert('구글 라이브러리 로딩 중입니다. 잠시 후 다시 시도하세요.'); return; }
@@ -1719,7 +1890,7 @@ function exportICS() {
 // Guide modal
 // ═══════════════════════════════════════════════════════
 let guideIdx=0;
-const GUIDE_TOTAL=9;
+const GUIDE_TOTAL=10;
 function openGuide(idx=0){
   guideIdx=idx;
   _showGuideSection();
