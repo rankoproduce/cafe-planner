@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>leaflyene house 운영플래너</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Firebase (compat CDN — 별도 빌드 불필요) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <style>
     :root {
       --br:#6f4e37; --br-lt:#a0785a; --br-dk:#4a3120;
@@ -423,7 +426,7 @@
     <div class="h-link-sep"></div>
     <button class="gcal-sync-btn" id="gcalSyncBtn" onclick="gcalToggleAuth()">🔗 구글 캘린더 연동</button>
     <button class="gcal-sync-btn" id="gcalResyncBtn" onclick="gcalSyncAll()" style="display:none;" title="전체 업무를 전용 캘린더에 다시 동기화">🔄 전체 재동기화</button>
-    <span class="drive-badge" id="driveBadge" title="Google Drive에 실시간 백업 중 — 여러 기기에서 동일한 데이터 사용 가능">☁️ 드라이브 동기화</span>
+    <span class="drive-badge" id="driveBadge" title="Firebase 실시간 동기화 중 — 누구나 같은 데이터를 실시간으로 공유">🔥 실시간 동기화</span>
   </div>
 </header>
 
@@ -1065,14 +1068,14 @@ function loadCats() {
   if(raw){try{categories=JSON.parse(raw);return;}catch(e){}}
   categories=DEFAULT_CATS.map(c=>({...c})); saveCats();
 }
-function saveCats() { localStorage.setItem(SK_CATS,JSON.stringify(categories)); if(!_driveLoading) driveSave(); }
+function saveCats() { localStorage.setItem(SK_CATS,JSON.stringify(categories)); if(!_fbUpdating) fbSave(); }
 
 function loadTasks() {
   const raw=localStorage.getItem(SK_TASKS);
   if(raw){try{tasks=JSON.parse(raw).map(norm);return;}catch(e){}}
   tasks=defaults(); saveTasks();
 }
-function saveTasks() { localStorage.setItem(SK_TASKS,JSON.stringify(tasks)); if(!_driveLoading) driveSave(); }
+function saveTasks() { localStorage.setItem(SK_TASKS,JSON.stringify(tasks)); if(!_fbUpdating) fbSave(); }
 
 function defaults() {
   const d=o=>{const x=new Date(today);x.setDate(x.getDate()+o);return ds(x);};
@@ -1323,32 +1326,91 @@ function closeCatMgr() { document.getElementById('catModal').classList.remove('o
 // Google Calendar — Real-time sync (전용 캘린더)
 // ═══════════════════════════════════════════════════════
 const GCAL_CLIENT_ID  = '22239193799-nhjsdkvoajcccifovf1leglhella8rpv.apps.googleusercontent.com';
-// Calendar + Drive appdata (hidden app folder only — doesn't touch user's Drive files)
-const GCAL_SCOPE      = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/drive.appdata';
+const GCAL_SCOPE      = 'https://www.googleapis.com/auth/calendar';
 const GCAL_CAL_NAME   = '🌿 leaflyene 운영플래너';
-const GCAL_CAL_COLOR  = '#7986CB'; // 인디고
+const GCAL_CAL_COLOR  = '#7986CB';
 const GCAL_BASE       = 'https://www.googleapis.com/calendar/v3';
 const SK_GCAL_ID      = 'leaflyene-gcal-calid';
+const SK_GCAL_AUTO    = 'leaflyene-gcal-auto'; // 자동 재연결 플래그
 
-// Google Drive appdata constants
-const DRIVE_BASE        = 'https://www.googleapis.com/drive/v3';
-const DRIVE_UPLOAD_BASE = 'https://www.googleapis.com/upload/drive/v3';
-const DRIVE_FILE_NAME   = 'leaflyene-planner-data.json';
-const SK_DRIVE_FILE     = 'leaflyene-drive-fileid';
+// Firebase 설정
+const FB_CONFIG = {
+  apiKey:            "AIzaSyDo124FeEgMBlM0pjVlsAnUS2EHX391rH8",
+  authDomain:        "leaflyene-planner-8094e.firebaseapp.com",
+  databaseURL:       "https://leaflyene-planner-8094e-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "leaflyene-planner-8094e",
+  storageBucket:     "leaflyene-planner-8094e.firebasestorage.app",
+  messagingSenderId: "972010677386",
+  appId:             "1:972010677386:web:8b69e77939b068b9cc7973",
+};
+const FB_PATH = 'planner'; // Realtime DB 경로
+
+let fbApp  = null;
+let fbDb   = null;
+let _fbSaveTimer  = null;
+let _fbUpdating   = false; // 리스너 → 저장 → 리스너 무한루프 방지
 
 let gcalToken       = null;
 let gcalTokenClient = null;
-let gcalCalId       = localStorage.getItem(SK_GCAL_ID) || null; // 전용 캘린더 ID
-let driveFileId     = localStorage.getItem(SK_DRIVE_FILE) || null;
-let _driveSaveTimer = null;
-let _driveLoading   = false; // 드라이브에서 로딩 중일 때 재귀 driveSave 방지
+let gcalCalId       = localStorage.getItem(SK_GCAL_ID) || null;
 
 function gcalEventsUrl(eventId='') {
   const base = `${GCAL_BASE}/calendars/${encodeURIComponent(gcalCalId||'primary')}/events`;
   return eventId ? `${base}/${eventId}` : base;
 }
 
-// Init — called once GIS library is loaded
+// Firebase 초기화 + 실시간 리스너 연결
+function fbInit() {
+  try {
+    fbApp = firebase.initializeApp(FB_CONFIG);
+    fbDb  = firebase.database();
+    // 실시간 리스너: 다른 기기/사용자가 데이터를 바꾸면 즉시 반영
+    fbDb.ref(FB_PATH).on('value', snap => {
+      if(_fbUpdating) return;
+      const data = snap.val();
+      if(!data?.tasks || !data?.categories) return;
+      const fbTime    = new Date(data.updatedAt || 0).getTime();
+      const localSaved = localStorage.getItem('leaflyene-data-savedAt');
+      const localTime = new Date(localSaved || 0).getTime();
+      if(fbTime > localTime + 500) { // 500ms 버퍼 (자기 저장 무시)
+        _fbUpdating = true;
+        tasks      = data.tasks.map(norm);
+        categories = data.categories;
+        localStorage.setItem(SK_TASKS, JSON.stringify(tasks));
+        localStorage.setItem(SK_CATS,  JSON.stringify(categories));
+        localStorage.setItem('leaflyene-data-savedAt', data.updatedAt);
+        _fbUpdating = false;
+        renderAll();
+        updateDriveBadge(true);
+      }
+    });
+    // 최초 1회: Firebase가 비어있으면 현재 로컬 데이터를 업로드
+    fbDb.ref(FB_PATH).once('value').then(snap => {
+      if(!snap.val()) fbSaveNow();
+    });
+    updateDriveBadge(true);
+  } catch(e){ console.warn('Firebase init error:', e); }
+}
+
+// debounce 저장 (1초)
+function fbSave() {
+  if(!fbDb) return;
+  clearTimeout(_fbSaveTimer);
+  _fbSaveTimer = setTimeout(fbSaveNow, 1000);
+}
+
+async function fbSaveNow() {
+  if(!fbDb) return;
+  const updatedAt = new Date().toISOString();
+  localStorage.setItem('leaflyene-data-savedAt', updatedAt);
+  _fbUpdating = true;
+  try {
+    await fbDb.ref(FB_PATH).set({ tasks, categories, updatedAt });
+  } catch(e){ console.warn('Firebase save error:', e); }
+  _fbUpdating = false;
+}
+
+// GIS 라이브러리 로드 후 초기화
 function gcalInit() {
   if(!window.google?.accounts?.oauth2){ setTimeout(gcalInit,300); return; }
   gcalTokenClient = google.accounts.oauth2.initTokenClient({
@@ -1356,22 +1418,33 @@ function gcalInit() {
     scope: GCAL_SCOPE,
     callback: gcalOnToken,
   });
+  // 이전에 연동한 적 있으면 팝업 없이 자동 재연결
+  if(localStorage.getItem(SK_GCAL_AUTO) === '1') {
+    setTimeout(()=>{
+      gcalTokenClient.requestAccessToken({prompt: ''});
+    }, 800);
+  }
 }
-window.addEventListener('load', ()=>setTimeout(gcalInit,500));
+
+window.addEventListener('load', () => {
+  fbInit();               // Firebase 먼저 시작
+  setTimeout(gcalInit, 500); // GCal은 GIS 라이브러리 로드 후
+});
 
 async function gcalOnToken(resp) {
-  if(resp.error){ console.warn('GCal auth error:', resp); return; }
+  if(resp.error){
+    // 자동 재연결 시 팝업 없이 실패하는 경우는 조용히 무시
+    if(resp.error !== 'interaction_required') console.warn('GCal auth error:', resp);
+    return;
+  }
   gcalToken = resp.access_token;
-  updateGcalBtn('⏳ 데이터 동기화 중...');
-
-  // 1. 드라이브에서 최신 데이터 로드 (다른 기기 데이터 동기화)
-  await driveLoad();
-
-  // 2. 전용 구글 캘린더 준비
+  localStorage.setItem(SK_GCAL_AUTO, '1'); // 다음 방문 시 자동 재연결
   updateGcalBtn('⏳ 캘린더 준비 중...');
+
+  // 전용 구글 캘린더 준비
   await gcalGetOrCreateCalendar();
 
-  // 3. 전체 업무를 캘린더에 동기화
+  // 전체 업무를 캘린더에 동기화
   await gcalSyncAll();
   updateGcalBtn();
 }
@@ -1427,12 +1500,11 @@ async function gcalGetOrCreateCalendar() {
 
 function gcalToggleAuth() {
   if(gcalToken){
-    if(!confirm('구글 연동을 해제하시겠습니까?\n(구글 캘린더의 일정 및 드라이브 데이터는 삭제되지 않습니다)')) return;
+    if(!confirm('구글 캘린더 연동을 해제하시겠습니까?\n(캘린더 일정은 삭제되지 않습니다)')) return;
     google.accounts.oauth2.revoke(gcalToken, ()=>{});
     gcalToken = null;
-    clearTimeout(_driveSaveTimer);
+    localStorage.removeItem(SK_GCAL_AUTO); // 자동 재연결 해제
     updateGcalBtn();
-    updateDriveBadge(false);
   } else {
     if(!gcalTokenClient){ alert('구글 라이브러리 로딩 중입니다. 잠시 후 다시 시도하세요.'); return; }
     gcalTokenClient.requestAccessToken({prompt: gcalCalId ? '' : 'consent'});
@@ -1447,7 +1519,7 @@ function updateGcalBtn(label=null) {
   if(gcalToken){
     btn.textContent = '✅ 구글 연동됨';
     btn.classList.add('connected');
-    btn.title = '🌿 캘린더 + ☁️ 드라이브 동기화 중\n클릭하면 연동 해제';
+    btn.title = '🌿 leaflyene 운영플래너 캘린더 연동 중\n클릭하면 연동 해제';
     if(rBtn) rBtn.style.display='inline-flex';
   } else {
     btn.textContent = '🔗 구글 캘린더 연동';
@@ -1515,153 +1587,8 @@ async function gcalDeleteEvent(t) {
 }
 
 // ═══════════════════════════════════════════════════════
-// Google Drive — 크로스 디바이스 데이터 동기화
-// (appDataFolder: 이 앱만 접근 가능한 숨김 폴더)
+// Firebase 배지 업데이트
 // ═══════════════════════════════════════════════════════
-
-// Drive용 fetch 래퍼
-async function driveRequest(method, url, body=null, rawBody=false) {
-  if(!gcalToken) return null;
-  const headers = { 'Authorization': `Bearer ${gcalToken}` };
-  if(!rawBody) headers['Content-Type'] = 'application/json';
-  const opts = { method, headers };
-  if(body !== null) opts.body = rawBody ? body : JSON.stringify(body);
-  try {
-    const res = await fetch(url, opts);
-    if(res.status === 401){ gcalToken=null; updateGcalBtn(); return null; }
-    return res;
-  } catch(e){ console.warn('Drive request error:', e); return null; }
-}
-
-// 드라이브 appDataFolder에서 데이터 파일 로드
-// 파일이 있으면 로컬 데이터보다 드라이브 데이터를 우선 적용
-async function driveLoad() {
-  if(!gcalToken) return false;
-  try {
-    // appDataFolder에서 파일 검색
-    const listRes = await driveRequest('GET',
-      `${DRIVE_BASE}/files?spaces=appDataFolder&fields=files(id,name,modifiedTime)&q=name%3D'${DRIVE_FILE_NAME}'`
-    );
-    if(!listRes?.ok) {
-      if(listRes?.status===403){
-        showToast('⚠️ Drive API가 비활성화 상태입니다.\nGoogle Cloud Console에서 Drive API를 활성화해 주세요.', 'warn', 6000);
-      }
-      return false;
-    }
-
-    const list = await listRes.json();
-    const files = (list.files || []).slice().sort(
-      (a,b) => new Date(b.modifiedTime) - new Date(a.modifiedTime)
-    );
-
-    if(files.length === 0) {
-      // 드라이브에 파일 없음 → 현재 로컬 데이터를 드라이브에 첫 백업
-      await driveSaveNow(true);
-      showToast('☁️ 드라이브에 데이터 첫 백업 완료', 'ok');
-      updateDriveBadge(true);
-      return false;
-    }
-
-    // 가장 최신 파일 사용, 중복 파일 정리
-    driveFileId = files[0].id;
-    localStorage.setItem(SK_DRIVE_FILE, driveFileId);
-    for(let i=1; i<files.length; i++){
-      driveRequest('DELETE', `${DRIVE_BASE}/files/${files[i].id}`).catch(()=>{});
-    }
-
-    // 파일 내용 로드
-    const contentRes = await driveRequest('GET', `${DRIVE_BASE}/files/${driveFileId}?alt=media`);
-    if(!contentRes?.ok) return false;
-
-    const data = await contentRes.json();
-    if(!data.tasks || !data.categories) return false;
-
-    // 타임스탬프 비교: 드라이브가 더 최신이면 로컬을 덮어씀
-    const driveTime  = new Date(data.savedAt || 0).getTime();
-    const localSaved = localStorage.getItem('leaflyene-data-savedAt');
-    const localTime  = new Date(localSaved || 0).getTime();
-
-    if(driveTime > localTime) {
-      _driveLoading = true;
-      tasks      = data.tasks.map(norm);
-      categories = data.categories;
-      localStorage.setItem(SK_TASKS, JSON.stringify(tasks));
-      localStorage.setItem(SK_CATS,  JSON.stringify(categories));
-      localStorage.setItem('leaflyene-data-savedAt', data.savedAt);
-      _driveLoading = false;
-      renderAll();
-      showToast(`☁️ 드라이브에서 최신 데이터를 불러왔습니다 (업무 ${tasks.length}개)`, 'ok');
-      updateDriveBadge(true);
-      return true;
-    }
-
-    // 로컬이 더 최신이거나 동일 → 로컬 데이터를 드라이브에 업로드
-    await driveSaveNow(true);
-    showToast('☁️ 드라이브 동기화 완료', 'ok');
-    updateDriveBadge(true);
-    return false;
-  } catch(e) {
-    console.warn('driveLoad error:', e);
-    return false;
-  }
-}
-
-// 즉시 드라이브에 저장 (debounce 없음)
-async function driveSaveNow(quiet=false) {
-  if(!gcalToken) return;
-  const savedAt = new Date().toISOString();
-  const payload = JSON.stringify({ version:1, savedAt, tasks, categories });
-  localStorage.setItem('leaflyene-data-savedAt', savedAt);
-
-  try {
-    if(driveFileId) {
-      // 기존 파일 내용 업데이트 (media upload)
-      const res = await driveRequest('PATCH',
-        `${DRIVE_UPLOAD_BASE}/files/${driveFileId}?uploadType=media`,
-        payload, true
-      );
-      if(res?.ok){ if(!quiet) updateDriveBadge(true); return; }
-      // 404 등 에러면 파일 ID 초기화 후 재생성
-      driveFileId = null; localStorage.removeItem(SK_DRIVE_FILE);
-    }
-
-    // 새 파일 생성 (multipart: 메타데이터 + 내용)
-    const boundary = 'lfy_bnd_' + Date.now();
-    const body = [
-      `--${boundary}`,
-      'Content-Type: application/json; charset=UTF-8',
-      '',
-      JSON.stringify({ name: DRIVE_FILE_NAME, parents: ['appDataFolder'] }),
-      `--${boundary}`,
-      'Content-Type: application/json',
-      '',
-      payload,
-      `--${boundary}--`,
-    ].join('\r\n');
-
-    const res = await fetch(`${DRIVE_UPLOAD_BASE}/files?uploadType=multipart`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${gcalToken}`,
-        'Content-Type': `multipart/related; boundary=${boundary}`,
-      },
-      body,
-    });
-    if(res?.ok){
-      const d = await res.json();
-      driveFileId = d.id;
-      localStorage.setItem(SK_DRIVE_FILE, driveFileId);
-      if(!quiet) updateDriveBadge(true);
-    }
-  } catch(e){ console.warn('driveSaveNow error:', e); }
-}
-
-// debounce 래퍼 — saveTasks/saveCats에서 호출
-function driveSave() {
-  if(!gcalToken) return; // 로그인 안 됐으면 건너뜀
-  clearTimeout(_driveSaveTimer);
-  _driveSaveTimer = setTimeout(()=>driveSaveNow(true), 1800);
-}
 
 function updateDriveBadge(on) {
   const el = document.getElementById('driveBadge');
