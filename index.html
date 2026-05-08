@@ -1322,19 +1322,26 @@ async function gcalOnToken(resp) {
   gcalToken = resp.access_token;
   updateGcalBtn('⏳ 캘린더 준비 중...');
 
-  // 전용 캘린더 가져오거나 새로 만들기
-  await gcalGetOrCreateCalendar();
+  // 전용 캘린더 가져오거나 새로 만들기 — 새로 생성됐으면 true 반환
+  const isNew = await gcalGetOrCreateCalendar();
   updateGcalBtn();
 
-  // 아직 연동 안 된 업무만 새로 푸시
-  tasks.filter(t=>!t.gcalEventId).forEach(t=>gcalCreateEvent(t));
+  if(isNew) {
+    // 새 전용 캘린더: 기존 gcalEventId(기본 캘린더용)를 모두 초기화 후 전체 재동기화
+    tasks.forEach(t=>{ t.gcalEventId=null; });
+    saveTasks();
+    tasks.forEach(t=>gcalCreateEvent(t));
+  } else {
+    // 기존 캘린더 재연결: 연동 안 된 업무만 추가
+    tasks.filter(t=>!t.gcalEventId).forEach(t=>gcalCreateEvent(t));
+  }
 }
 
 async function gcalGetOrCreateCalendar() {
   // 이미 저장된 ID가 있으면 유효한지 확인
   if(gcalCalId) {
     const check = await gcalRequest('GET', `${GCAL_BASE}/calendars/${encodeURIComponent(gcalCalId)}`);
-    if(check?.ok) return; // 기존 캘린더 그대로 사용
+    if(check?.ok) return false; // 기존 캘린더 그대로 사용
     gcalCalId = null; localStorage.removeItem(SK_GCAL_ID);
   }
 
@@ -1343,7 +1350,7 @@ async function gcalGetOrCreateCalendar() {
   if(listRes?.ok) {
     const list = await listRes.json();
     const found = (list.items||[]).find(c=>c.summary===GCAL_CAL_NAME);
-    if(found){ gcalCalId=found.id; localStorage.setItem(SK_GCAL_ID,gcalCalId); return; }
+    if(found){ gcalCalId=found.id; localStorage.setItem(SK_GCAL_ID,gcalCalId); return false; }
   }
 
   // 없으면 새로 생성
@@ -1356,12 +1363,13 @@ async function gcalGetOrCreateCalendar() {
     const cal = await createRes.json();
     gcalCalId = cal.id;
     localStorage.setItem(SK_GCAL_ID, gcalCalId);
-    // 캘린더 색상 설정
     await gcalRequest('PATCH', `${GCAL_BASE}/users/me/calendarList/${encodeURIComponent(gcalCalId)}`, {
-      colorId: '9', // 블루베리
+      colorId: '9',
       backgroundColor: GCAL_CAL_COLOR,
     });
+    return true; // 새로 생성됨 → 전체 재동기화 필요
   }
+  return false;
 }
 
 function gcalToggleAuth() {
