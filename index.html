@@ -406,6 +406,7 @@
     <a class="h-link-tab" href="https://theranko.slack.com/archives/C0ARA19JX43" target="_blank" rel="noopener">💬 슬랙</a>
     <div class="h-link-sep"></div>
     <button class="gcal-sync-btn" id="gcalSyncBtn" onclick="gcalToggleAuth()">🔗 구글 캘린더 연동</button>
+    <button class="gcal-sync-btn" id="gcalResyncBtn" onclick="gcalSyncAll()" style="display:none;" title="전체 업무를 전용 캘린더에 다시 동기화">🔄 전체 재동기화</button>
     <button class="h-link-tab" onclick="exportData()" title="모든 업무·분류 데이터를 백업 파일로 저장">💾 데이터 백업</button>
     <label class="h-link-tab" style="cursor:pointer;" title="백업 파일을 불러와 데이터 복원">📂 데이터 복원<input type="file" accept=".json" onchange="importData(event)" style="display:none;"></label>
     <button class="h-link-tab" onclick="exportICS()" title="모든 업무를 ICS 파일로 내보내 구글 캘린더에 가져오기">📅 ICS 내보내기</button>
@@ -1322,18 +1323,24 @@ async function gcalOnToken(resp) {
   gcalToken = resp.access_token;
   updateGcalBtn('⏳ 캘린더 준비 중...');
 
-  // 전용 캘린더 가져오거나 새로 만들기 — 새로 생성됐으면 true 반환
-  const isNew = await gcalGetOrCreateCalendar();
-  updateGcalBtn();
+  await gcalGetOrCreateCalendar();
 
-  if(isNew) {
-    // 새 전용 캘린더: 기존 gcalEventId(기본 캘린더용)를 모두 초기화 후 전체 재동기화
-    tasks.forEach(t=>{ t.gcalEventId=null; });
-    saveTasks();
-    tasks.forEach(t=>gcalCreateEvent(t));
-  } else {
-    // 기존 캘린더 재연결: 연동 안 된 업무만 추가
-    tasks.filter(t=>!t.gcalEventId).forEach(t=>gcalCreateEvent(t));
+  // 연결 시 항상 전체 재동기화 (gcalEventId 초기화 → 전용 캘린더에 새로 등록)
+  await gcalSyncAll();
+  updateGcalBtn();
+}
+
+// 전체 업무를 전용 캘린더에 순차 동기화
+async function gcalSyncAll() {
+  if(!gcalToken || !gcalCalId) return;
+  updateGcalBtn('⏳ 동기화 중...');
+  tasks.forEach(t=>{ t.gcalEventId=null; });
+  saveTasks();
+  let done=0;
+  for(const t of tasks) {
+    await gcalCreateEvent(t);
+    done++;
+    updateGcalBtn(`⏳ ${done}/${tasks.length} 동기화 중...`);
   }
 }
 
@@ -1386,16 +1393,19 @@ function gcalToggleAuth() {
 
 function updateGcalBtn(label=null) {
   const btn = document.getElementById('gcalSyncBtn');
+  const rBtn = document.getElementById('gcalResyncBtn');
   if(!btn) return;
   if(label){ btn.textContent=label; return; }
   if(gcalToken){
     btn.textContent = '✅ 캘린더 연동됨';
     btn.classList.add('connected');
     btn.title = '🌿 leaflyene 운영플래너 캘린더에 연동 중\n클릭하면 연동 해제';
+    if(rBtn) rBtn.style.display='inline-flex';
   } else {
     btn.textContent = '🔗 구글 캘린더 연동';
     btn.classList.remove('connected');
     btn.title = '클릭해서 구글 캘린더와 실시간 연동 (전용 캘린더 자동 생성)';
+    if(rBtn) rBtn.style.display='none';
   }
 }
 
