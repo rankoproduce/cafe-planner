@@ -198,14 +198,20 @@
     .wk-scroll::-webkit-scrollbar{width:3px;}
     .wk-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
     .wday{margin-bottom:8px;}
-    .wday-hd{display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:7px;background:var(--cream-dk);border:1.5px solid var(--border);font-size:11px;font-weight:700;margin-bottom:3px;position:sticky;top:0;z-index:1;}
+    .wday-hd{display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:7px;background:var(--cream-dk);border:1.5px solid var(--border);font-size:11px;font-weight:700;margin-bottom:3px;position:sticky;top:0;z-index:1;cursor:pointer;user-select:none;}
+    .wday-hd:hover{background:#e8ddd4;}
+    .wday-hd.past{opacity:.6;}
+    .wday-arr{margin-left:auto;font-size:10px;color:var(--muted);transition:transform .2s;flex-shrink:0;}
+    .wday-arr.cl{transform:rotate(-90deg);}
+    .wday-body{overflow:hidden;}
+    .wday-body.cl{display:none;}
     .wday-hd.td{background:var(--br-pale);border-color:var(--br);color:var(--br-dk);}
     .wday-hd.su .dn{color:#c0392b;}
     .wday-hd.sa .dn{color:#2980b9;}
     .dn{font-size:13px;font-weight:800;}
     .dd{font-size:10px;color:var(--muted);font-weight:600;}
     .td .dd{color:var(--br);}
-    .wday-cnt{margin-left:auto;font-size:9px;font-weight:700;background:var(--br);color:#fff;padding:1px 6px;border-radius:9px;}
+    .wday-cnt{font-size:9px;font-weight:700;background:var(--br);color:#fff;padding:1px 6px;border-radius:9px;}
     .wtask{display:flex;align-items:flex-start;gap:7px;padding:6px 9px;border-radius:6px;border:1px solid var(--border);background:#fff;margin-bottom:3px;cursor:pointer;transition:box-shadow .15s;}
     .wtask:hover{box-shadow:var(--sh);}
     .wtask.done{opacity:.44;}
@@ -217,13 +223,17 @@
     .wt-ft{display:flex;align-items:center;gap:4px;margin-top:3px;flex-wrap:wrap;}
     .wt-lnk{display:inline-flex;align-items:center;gap:2px;font-size:9px;font-weight:700;color:var(--br);background:var(--br-pale);padding:1px 5px;border-radius:8px;text-decoration:none;}
     .wt-lnk:hover{background:#e0c4a8;}
-    .link-list{display:flex;flex-direction:column;gap:5px;margin-bottom:5px;}
-    .link-row{display:flex;gap:5px;align-items:center;}
-    .link-row input{flex:1;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:7px;outline:none;}
-    .link-row input:focus{border-color:var(--br);}
+    .link-list{display:flex;flex-direction:column;gap:7px;margin-bottom:5px;}
+    .link-row{display:flex;flex-direction:column;gap:3px;background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:6px 8px;}
+    .link-row-top{display:flex;gap:5px;align-items:center;}
+    .link-url{flex:1;font-size:12px;padding:4px 7px;border:1px solid var(--border);border-radius:6px;outline:none;background:#fff;}
+    .link-url:focus{border-color:var(--br);}
+    .link-label{font-size:11px;padding:3px 7px;border:1px solid transparent;border-radius:6px;outline:none;background:transparent;color:var(--muted);width:100%;box-sizing:border-box;}
+    .link-label:focus{border-color:var(--br-lt);background:#fff;}
+    .link-label::placeholder{color:#c0b090;font-style:italic;}
     .link-rm-btn{flex-shrink:0;background:none;border:none;color:var(--muted);font-size:15px;line-height:1;cursor:pointer;padding:2px 4px;border-radius:4px;transition:color .15s;}
     .link-rm-btn:hover{color:#e74c3c;}
-    .link-add-btn{font-size:11px;color:var(--br);background:var(--br-pale);border:1px dashed var(--br-lt);border-radius:7px;padding:4px 10px;cursor:pointer;width:100%;text-align:left;transition:background .15s;}
+    .link-add-btn{font-size:11px;color:var(--br);background:var(--br-pale);border:1px dashed var(--br-lt);border-radius:7px;padding:4px 10px;cursor:pointer;width:100%;text-align:left;transition:background .15s;box-sizing:border-box;}
     .link-add-btn:hover{background:#e0c4a8;}
     .wt-range{font-size:10px;color:var(--muted);}
     .wday-empty{font-size:11px;color:var(--muted);padding:4px 10px;font-style:italic;}
@@ -516,8 +526,10 @@
     .links-cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
     .links-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;margin-bottom:7px;background:#fff;transition:all .18s;}
     .links-item:hover{border-color:var(--br-lt);box-shadow:var(--sh);background:var(--cream);}
-    .links-item-info{flex:1;min-width:0;}
+    .links-item-info{flex:1;min-width:0;cursor:pointer;}
+    .links-item-info:hover .links-item-title{color:var(--br);text-decoration:underline;}
     .links-item-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .links-item-bookmark{font-size:12px;font-weight:600;color:var(--br-dk);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .links-item-url{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .links-item-done .links-item-title{text-decoration:line-through;opacity:.5;}
     .links-open-btn{flex-shrink:0;display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:8px;background:var(--br);color:#fff;font-size:11px;font-weight:700;text-decoration:none;transition:background .15s;white-space:nowrap;}
@@ -607,7 +619,8 @@
         </div>
         <div class="f">
           <label>참고 링크 (선택)</label>
-          <input id="nLink" type="url" placeholder="https://" />
+          <div id="nLinkList" class="link-list"></div>
+          <button type="button" class="link-add-btn" onclick="addLinkInput('nLinkList')">+ 링크 추가</button>
         </div>
         <div class="f">
           <label>메모 (선택)</label>
@@ -768,7 +781,11 @@
           <label>상위 업무 (선택)</label>
           <select id="qParent"></select>
         </div>
-        <div class="f"><label>참고 링크 (선택)</label><input id="qLink" type="url" placeholder="https://" /></div>
+        <div class="f">
+          <label>참고 링크 (선택)</label>
+          <div id="qLinkList" class="link-list"></div>
+          <button type="button" class="link-add-btn" onclick="addLinkInput('qLinkList')">+ 링크 추가</button>
+        </div>
         <div class="f"><label>메모 (선택)</label><textarea id="qNote" placeholder="추가 메모..."></textarea></div>
         <button class="btn btn-br btn-block" onclick="addQuick()">✚ 추가하기</button>
       </div>
@@ -798,7 +815,11 @@
       <label>상위 업무 (선택)</label>
       <select id="eParent"></select>
     </div>
-    <div class="f"><label>참고 링크</label><input id="eLink" type="url" placeholder="https://" /></div>
+    <div class="f">
+      <label>참고 링크</label>
+      <div id="eLinkList" class="link-list"></div>
+      <button type="button" class="link-add-btn" onclick="addLinkInput('eLinkList')">+ 링크 추가</button>
+    </div>
     <div class="f"><label>메모</label><textarea id="eNote"></textarea></div>
     <div class="gcal-export-bar">
       <span>📅 이 업무를 구글 캘린더에 바로 추가</span>
@@ -1277,8 +1298,12 @@ function norm(t) {
   if (!t.endDate)   t.endDate   = t.startDate||'';
   if (!t.startDate) t.startDate = t.endDate||'';
   if (t.parentId===undefined) t.parentId=null;
-  // 구 link(string) → links(array) 마이그레이션
-  if (!t.links) t.links = (t.link && t.link.trim()) ? [t.link.trim()] : [];
+  // 구 link(string) / links(string[]) → links([{url,label}]) 마이그레이션
+  if (!t.links) {
+    t.links = (t.link && t.link.trim()) ? [{url: t.link.trim(), label:''}] : [];
+  } else if (t.links.length && typeof t.links[0] === 'string') {
+    t.links = t.links.map(u => ({url: u, label: ''}));
+  }
   delete t.link;
   return t;
 }
@@ -1381,13 +1406,15 @@ function addTask() {
   const pv=document.getElementById('nParent').value;
   const newT={id:Date.now(),title,cats:[...nSel],
     startDate:s,endDate:e||s,
-    link:document.getElementById('nLink').value.trim(),
+    links:readLinks('nLinkList'),
     note:document.getElementById('nNote').value.trim(),
     done:false,parentId:pv?Number(pv):null};
   tasks.push(newT);
   saveTasks();
   gcalCreateEvent(newT);
-  ['nTitle','nLink','nNote'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('nTitle').value='';
+  document.getElementById('nNote').value='';
+  renderLinkInputs('nLinkList',[]);
   document.getElementById('nParent').value='';
   nSel=[];
   renderAll();
@@ -1400,7 +1427,7 @@ function addQuick() {
   const pv=document.getElementById('qParent').value;
   const newT={id:Date.now(),title,cats:[...qSel],
     startDate:s,endDate:e||s,
-    link:document.getElementById('qLink').value.trim(),
+    links:readLinks('qLinkList'),
     note:document.getElementById('qNote').value.trim(),
     done:false,parentId:pv?Number(pv):null};
   tasks.push(newT);
@@ -1443,7 +1470,7 @@ function openEdit(id) {
   document.getElementById('eTitle').value=t.title;
   document.getElementById('eStart').value=t.startDate||'';
   document.getElementById('eEnd').value  =t.endDate||'';
-  document.getElementById('eLink').value =t.link||'';
+  renderLinkInputs('eLinkList', t.links && t.links.length ? t.links : []);
   document.getElementById('eNote').value =t.note||'';
   renderPicker('eCatPicker',eSel);
   renderParentOpts('eParent',id);
@@ -1457,7 +1484,7 @@ function saveEdit() {
   t.cats=[...eSel];
   const s=document.getElementById('eStart').value, e=document.getElementById('eEnd').value;
   t.startDate=s; t.endDate=e||s;
-  t.link=document.getElementById('eLink').value.trim();
+  t.links=readLinks('eLinkList');
   t.note=document.getElementById('eNote').value.trim();
   const pv=document.getElementById('eParent').value;
   t.parentId=pv?Number(pv):null;
@@ -1486,7 +1513,7 @@ function dmTaskHTML(t, dstr, isToday) {
       <div class="dm-meta">
         ${cats.map(id=>{const c=catById(id);return `<span class="chip" style="background:${c.bg};color:${c.fg}">${c.icon} ${esc(c.name)}</span>`;}).join('')}
         ${t.startDate!==t.endDate?`<span style="font-size:10px;color:var(--muted);">📅 ${fmtMD(t.startDate)}~${fmtMD(t.endDate)}</span>`:''}
-        ${lnkHTML(t.link,'wt-lnk')}
+        ${linksHTML(t,'wt-lnk')}
       </div>
       ${t.note?`<div style="font-size:10px;color:var(--muted);margin-top:2px;">${esc(t.note)}</div>`:''}
     </div>
@@ -1516,7 +1543,8 @@ function openDayModal(dstr) {
   qSel=[];
   document.getElementById('qStart').value=dstr;
   document.getElementById('qEnd').value=dstr;
-  ['qTitle','qLink','qNote'].forEach(id=>document.getElementById(id).value='');
+  ['qTitle','qNote'].forEach(id=>document.getElementById(id).value='');
+  renderLinkInputs('qLinkList',[]);
   renderPicker('qCatPicker',qSel);
   renderParentOpts('qParent');
   wkStart=weekOf(d);
@@ -1609,10 +1637,10 @@ function renderLinksModal() {
   const count = document.getElementById('linksCount');
   if(!body) return;
 
-  // 링크 있는 업무만 추출
-  const linked = tasks.filter(t => t.link && t.link.trim());
+  // 링크 있는 업무만 추출 (links 배열 기준)
+  const linked = tasks.filter(t => t.links && t.links.length);
   if(!linked.length) {
-    body.innerHTML = `<div class="links-empty">🔍 링크가 등록된 업무가 없습니다.<br><span style="font-size:11px;margin-top:4px;display:block;">업무 추가 시 '참고 링크' 항목에 URL을 입력하면 여기에 모입니다.</span></div>`;
+    body.innerHTML = `<div class="links-empty">🔍 링크가 등록된 업무가 없습니다.<br><span style="font-size:11px;margin-top:4px;display:block;">업무 수정 시 '참고 링크' 항목에 URL을 입력하면 여기에 모입니다.</span></div>`;
     count.textContent = '';
     return;
   }
@@ -1637,6 +1665,7 @@ function renderLinksModal() {
     ...(grouped[UNGROUPED] ? [UNGROUPED] : [])
   ];
 
+  let totalLinks = 0;
   let html = '';
   sortedKeys.forEach(catId => {
     const cat    = catId === UNGROUPED ? null : catById(catId);
@@ -1648,26 +1677,33 @@ function renderLinksModal() {
       <div class="links-cat-title">
         <span class="links-cat-dot" style="background:${dotClr};"></span>
         ${label}
-        <span style="margin-left:auto;font-size:10px;font-weight:600;color:var(--muted);">${items.length}개</span>
+        <span style="margin-left:auto;font-size:10px;font-weight:600;color:var(--muted);">${items.length}개 업무</span>
       </div>`;
 
     items.forEach(t => {
-      let domain = '';
-      try { domain = new URL(t.link).hostname.replace('www.',''); } catch(e){ domain = t.link; }
-      html += `<div class="links-item${t.done?' links-item-done':''}">
-        <div class="links-item-info">
-          <div class="links-item-title" title="${esc(t.title)}">${esc(t.title)}</div>
-          <div class="links-item-url" title="${esc(t.link)}">${esc(domain)}</div>
-        </div>
-        <a class="links-open-btn" href="${esc(t.link)}" target="_blank" rel="noopener">열기 ↗</a>
-      </div>`;
+      t.links.forEach(linkObj => {
+        totalLinks++;
+        const url   = typeof linkObj === 'string' ? linkObj : (linkObj.url   || '');
+        const lbl   = typeof linkObj === 'object'  ? (linkObj.label || '') : '';
+        if(!url) return;
+        let domain = '';
+        try { domain = new URL(url).hostname.replace('www.',''); } catch(e){ domain = url; }
+        html += `<div class="links-item${t.done?' links-item-done':''}">
+          <div class="links-item-info" onclick="closeLinks();openEdit(${t.id})" title="클릭하여 업무 수정">
+            <div class="links-item-title" title="${esc(t.title)}">${esc(t.title)}</div>
+            ${lbl ? `<div class="links-item-bookmark" title="${esc(lbl)}">📎 ${esc(lbl)}</div>` : ''}
+            <div class="links-item-url" title="${esc(url)}">${esc(domain)}</div>
+          </div>
+          <a class="links-open-btn" href="${esc(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">열기 ↗</a>
+        </div>`;
+      });
     });
 
     html += `</div>`;
   });
 
   body.innerHTML = html;
-  count.textContent = `총 ${linked.length}개 링크`;
+  count.textContent = `총 ${totalLinks}개 링크 (${linked.length}개 업무)`;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1895,7 +1931,10 @@ function gcalBody(t) {
   let desc = '';
   if(cats)   desc += `[분류] ${cats}\n`;
   if(t.note) desc += `\n${t.note}`;
-  if(t.link) desc += `\n\n🔗 ${t.link}`;
+  if(t.links && t.links.length) desc += '\n\n' + t.links.map(l=>{
+    const u = typeof l==='string'?l:l.url; const lb = typeof l==='object'&&l.label?` (${l.label})`:'';
+    return `🔗 ${u}${lb}`;
+  }).join('\n');
   const s = t.startDate || t.endDate || new Date().toISOString().split('T')[0];
   const e = t.endDate   || t.startDate || s;
   return {
@@ -1970,7 +2009,7 @@ function gcalUrl(t) {
   let details = '';
   if(cats)    details += `분류: ${cats}\n`;
   if(t.note)  details += `메모: ${t.note}\n`;
-  if(t.link)  details += `링크: ${t.link}`;
+  if(t.links && t.links.length) details += `링크: ${t.links.map(l=>typeof l==='string'?l:l.url).join(', ')}`;
   const detailsEnc = encodeURIComponent(details.trim());
   let dates = '';
   if(s && e) {
@@ -2048,7 +2087,7 @@ function exportICS() {
     let desc = '';
     if(cats)   desc += `분류: ${cats}\\n`;
     if(t.note) desc += `메모: ${icsEsc(t.note)}\\n`;
-    if(t.link) desc += `링크: ${t.link}`;
+    if(t.links && t.links.length) desc += t.links.map(l=>{ const u=typeof l==='string'?l:l.url; const lb=typeof l==='object'&&l.label?`${l.label}: `:''; return `링크: ${lb}${u}`; }).join('\\n');
     lines.push('BEGIN:VEVENT');
     lines.push(`UID:leaflyene-${t.id}@planner`);
     lines.push(`DTSTAMP:${stamp}`);
@@ -2056,7 +2095,7 @@ function exportICS() {
     lines.push(`DTEND;VALUE=DATE:${icsEndDate(e)}`);
     lines.push(`SUMMARY:${icsEsc(t.title)}`);
     if(desc.trim()) lines.push(`DESCRIPTION:${desc.trim()}`);
-    if(t.link) lines.push(`URL:${t.link}`);
+    if(t.links && t.links[0]) { const fl=t.links[0]; lines.push(`URL:${typeof fl==='string'?fl:fl.url}`); }
     if(t.done) lines.push('STATUS:COMPLETED');
     lines.push('END:VEVENT');
   });
@@ -2228,54 +2267,59 @@ function daysInRange(t) {
   while(cur<=end&&lim++<180){days.push(ds(cur));cur.setDate(cur.getDate()+1);}
   return days;
 }
-function lnkHTML(url,cls) {
+function lnkHTML(linkObj, cls) {
+  const url   = typeof linkObj === 'string' ? linkObj : (linkObj && linkObj.url);
+  const label = typeof linkObj === 'object'  ? (linkObj.label || '') : '';
   if(!url) return '';
-  const href=safeHref(url);
-  const label=url.replace(/^https?:\/\//,'').split('/')[0].replace(/^www\./,'');
-  return `<a class="${cls}" href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 ${esc(label)}</a>`;
+  const href    = safeHref(url);
+  const display = label || url.replace(/^https?:\/\//,'').split('/')[0].replace(/^www\./,'');
+  return `<a class="${cls}" href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 ${esc(display)}</a>`;
 }
-function linksHTML(t,cls) {
-  const urls = t.links && t.links.length ? t.links : (t.link ? [t.link] : []);
-  return urls.map(u=>lnkHTML(u,cls)).join('');
+function linksHTML(t, cls) {
+  const links = t.links && t.links.length ? t.links : (t.link ? [{url:t.link,label:''}] : []);
+  return links.map(l => lnkHTML(l, cls)).join('');
 }
 
 // ── 멀티 링크 UI 헬퍼 ──
+function _linkRowHTML(url, label) {
+  return `<div class="link-row">
+    <div class="link-row-top">
+      <input type="url" class="link-url" placeholder="https://" value="${esc(url||'')}" />
+      <button type="button" class="link-rm-btn" onclick="removeLinkRow(this)" title="삭제">×</button>
+    </div>
+    <input type="text" class="link-label" placeholder="제목 또는 설명 (선택)" value="${esc(label||'')}" />
+  </div>`;
+}
 function renderLinkInputs(containerId, links) {
   const el = document.getElementById(containerId);
   if(!el) return;
-  const rows = (links && links.length ? links : ['']).map((url,i) => `
-    <div class="link-row">
-      <input type="url" placeholder="https://" value="${esc(url)}" />
-      <button type="button" class="link-rm-btn" onclick="removeLinkRow(this)" title="삭제">×</button>
-    </div>`).join('');
-  el.innerHTML = rows;
+  const list = links && links.length ? links : [{url:'', label:''}];
+  el.innerHTML = list.map(l => _linkRowHTML(
+    typeof l === 'string' ? l : l.url,
+    typeof l === 'string' ? '' : l.label
+  )).join('');
 }
 function addLinkInput(containerId) {
   const el = document.getElementById(containerId);
   if(!el) return;
-  const row = document.createElement('div');
-  row.className = 'link-row';
-  row.innerHTML = `<input type="url" placeholder="https://" /><button type="button" class="link-rm-btn" onclick="removeLinkRow(this)" title="삭제">×</button>`;
-  el.appendChild(row);
-  row.querySelector('input').focus();
+  el.insertAdjacentHTML('beforeend', _linkRowHTML('',''));
+  el.querySelector('.link-row:last-child .link-url').focus();
 }
 function removeLinkRow(btn) {
-  const row = btn.closest('.link-row');
+  const row  = btn.closest('.link-row');
   const list = row.parentElement;
   row.remove();
-  // 비어있으면 빈 행 하나 유지
   if(!list.querySelectorAll('.link-row').length) {
-    const empty = document.createElement('div');
-    empty.className = 'link-row';
-    empty.innerHTML = `<input type="url" placeholder="https://" /><button type="button" class="link-rm-btn" onclick="removeLinkRow(this)" title="삭제">×</button>`;
-    list.appendChild(empty);
+    list.insertAdjacentHTML('beforeend', _linkRowHTML('',''));
   }
 }
 function readLinks(containerId) {
   const el = document.getElementById(containerId);
   if(!el) return [];
-  return [...el.querySelectorAll('input[type="url"]')]
-    .map(i=>i.value.trim()).filter(Boolean);
+  return [...el.querySelectorAll('.link-row')].map(row => ({
+    url:   row.querySelector('.link-url')  ?.value.trim() || '',
+    label: row.querySelector('.link-label')?.value.trim() || ''
+  })).filter(l => l.url);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2301,7 +2345,7 @@ function tgChildRowHTML(t) {
       <span class="tg-child-dot" style="background:${c.fg};"></span>
       <span class="tg-child-title" title="${esc(t.title)}">${esc(t.title)}</span>
       ${rl?`<span class="tg-child-dt ${st}">${rl}</span>`:''}
-      ${t.link?lnkHTML(t.link,'lnk-btn'):''}
+      ${linksHTML(t,'lnk-btn')}
       <div class="tg-child-acts">
         <button class="btn btn-ic btn-teal" onclick="openEdit(${t.id})">✏️</button>
         <button class="btn btn-ic btn-red"  onclick="del(${t.id})">🗑</button>
@@ -2336,7 +2380,7 @@ function taskHTML(t, children=[]) {
         <div class="tg-meta">
           ${cats.map(id=>{const c=catById(id);return `<span class="chip" style="background:${c.bg};color:${c.fg}">${c.icon} ${esc(c.name)}</span>`;}).join('')}
           ${rl?`<span class="tg-dt ${st}">📅 ${rl}${st==='over'?' ⚠️':st==='soon'?' 🔥':''}</span>`:''}
-          ${t.link?lnkHTML(t.link,'lnk-btn'):''}
+          ${linksHTML(t,'lnk-btn')}
         </div>
         ${t.note?`<div class="tg-note">${esc(t.note)}</div>`:''}
       </div>
@@ -3020,6 +3064,13 @@ function tlCalcNewDates(drag) {
 // ═══════════════════════════════════════════════════════
 function changeWeek(delta){wkStart=new Date(wkStart);wkStart.setDate(wkStart.getDate()+delta*7);renderAll();}
 function goThisWeek(){wkStart=weekOf(today);calY=today.getFullYear();calM=today.getMonth();renderAll();}
+function toggleWday(hd) {
+  const body = hd.nextElementSibling;
+  const arr  = hd.querySelector('.wday-arr');
+  if(!body) return;
+  body.classList.toggle('cl');
+  arr && arr.classList.toggle('cl');
+}
 
 function renderWeekly() {
   const wkEnd=new Date(wkStart); wkEnd.setDate(wkEnd.getDate()+6);
@@ -3042,7 +3093,7 @@ function renderWeekly() {
               <div class="wt-t">${esc(t.title)}</div>
               <div class="wt-ft">
                 ${taskCats(t).map(id=>{const c=catById(id);return `<span class="chip" style="background:${c.bg};color:${c.fg}">${c.icon} ${esc(c.name)}</span>`;}).join('')}
-                ${lnkHTML(t.link,'wt-lnk')}
+                ${linksHTML(t,'wt-lnk')}
               </div>
             </div>
           </div>`).join('')}
@@ -3050,13 +3101,23 @@ function renderWeekly() {
     </div>`;
   }
 
+  const todayStr = ds(today);
   for(let i=0;i<7;i++){
     const d=new Date(wkStart); d.setDate(d.getDate()+i);
     const dstr=ds(d), dow=d.getDay(), isT=d.getTime()===today.getTime();
+    const isPast = dstr < todayStr;
     const dtsRaw=tasks.filter(t=>{const s=t.startDate||t.endDate||'',e=t.endDate||t.startDate||'';return s&&e&&s<=dstr&&dstr<=e;});
     const dts=isT ? applyTodayOrder(dtsRaw) : dtsRaw;
-    const hdCls=['wday-hd',isT?'td':'',dow===0?'su':dow===6?'sa':''].filter(Boolean).join(' ');
-    h+=`<div class="wday"><div class="${hdCls}"><span class="dn">${DAYS[dow]}</span><span class="dd">${d.getMonth()+1}.${d.getDate()}${isT?' ✦':''}</span>${dts.length?`<span class="wday-cnt">${dts.length}</span>`:''}</div>`;
+    const hdCls=['wday-hd',isT?'td':'',dow===0?'su':dow===6?'sa':'',isPast?'past':''].filter(Boolean).join(' ');
+    const collapsed = isPast; // 지난 날짜는 기본 접힘
+    h+=`<div class="wday">
+      <div class="${hdCls}" onclick="toggleWday(this)">
+        <span class="dn">${DAYS[dow]}</span>
+        <span class="dd">${d.getMonth()+1}.${d.getDate()}${isT?' ✦':''}</span>
+        ${dts.length?`<span class="wday-cnt">${dts.length}</span>`:''}
+        <span class="wday-arr${collapsed?' cl':''}">▾</span>
+      </div>
+      <div class="wday-body${collapsed?' cl':''}">`;
     if(!dts.length){h+=`<div class="wday-empty">업무 없음</div>`;}
     else dts.forEach(t=>{
       h+=`<div class="wtask ${t.done?'done':''}" onclick="toggle(${t.id})">
@@ -3066,14 +3127,18 @@ function renderWeekly() {
           <div class="wt-ft">
             ${taskCats(t).map(id=>{const c=catById(id);return `<span class="chip" style="background:${c.bg};color:${c.fg}">${c.icon} ${esc(c.name)}</span>`;}).join('')}
             ${t.startDate!==t.endDate?`<span class="wt-range">📅 ${fmtMD(t.startDate)}~${fmtMD(t.endDate)}</span>`:''}
-            ${lnkHTML(t.link,'wt-lnk')}
+            ${linksHTML(t,'wt-lnk')}
           </div>
         </div>
       </div>`;
     });
-    h+='</div>';
+    h+=`</div></div>`;
   }
   document.getElementById('wkList').innerHTML=h;
+
+  // 오늘 날짜 헤더로 스크롤
+  const todayHd = document.querySelector('#wkList .wday-hd.td');
+  if(todayHd) todayHd.closest('.wday').scrollIntoView({block:'start', behavior:'smooth'});
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3099,6 +3164,9 @@ function renderAll() {
 loadCats();
 loadTasks();
 renderAll();
+// 링크 입력 UI 초기화 (빈 행 하나씩)
+renderLinkInputs('nLinkList', []);
+renderLinkInputs('qLinkList', []);
 
 // ═══════════════════════════════════════════════════════
 // Sub-task modal
