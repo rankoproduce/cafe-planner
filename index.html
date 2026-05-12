@@ -108,6 +108,30 @@
       .mob-child-item.done .mob-child-title{text-decoration:line-through;}
       .mob-cat-badge{display:inline-block;font-size:10px;padding:1px 7px;border-radius:8px;font-weight:700;margin-right:4px;margin-bottom:3px;}
 
+      /* 이번주 — 모바일 전용 */
+      .mob-wk-day{margin-bottom:8px;}
+      .mob-wk-hd{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:var(--cream-dk);border:1.5px solid var(--border);font-size:12px;font-weight:700;cursor:pointer;user-select:none;}
+      .mob-wk-hd.mob-wk-today{background:var(--br-pale);border-color:var(--br);color:var(--br-dk);}
+      .mob-wk-hd.mob-wk-past{opacity:.55;}
+      .mob-wk-hd .mob-wk-dow{font-size:13px;font-weight:800;}
+      .mob-wk-hd .mob-wk-dow.su{color:#c0392b;}
+      .mob-wk-hd .mob-wk-dow.sa{color:#2980b9;}
+      .mob-wk-hd .mob-wk-date{color:var(--muted);font-size:11px;}
+      .mob-wk-cnt{font-size:9px;font-weight:700;background:var(--br);color:#fff;padding:1px 7px;border-radius:9px;}
+      .mob-wk-today .mob-wk-cnt{background:var(--br-dk);}
+      .mob-wk-arr{font-size:10px;color:var(--muted);transition:transform .2s;flex-shrink:0;margin-left:4px;}
+      .mob-wk-arr.cl{transform:rotate(-90deg);}
+      .mob-wk-body{overflow:hidden;border-radius:0 0 10px 10px;margin-top:2px;}
+      .mob-wk-body.cl{display:none;}
+      .mob-wk-task{display:flex;align-items:center;gap:10px;background:#fff;padding:10px 14px;border-bottom:1px solid var(--border);}
+      .mob-wk-task:last-child{border-bottom:none;border-radius:0 0 10px 10px;}
+      .mob-wk-task.done{opacity:.45;}
+      .mob-wk-chk{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;flex-shrink:0;background:#fff;transition:all .18s;}
+      .mob-wk-chk.on{background:var(--ok);border-color:var(--ok);color:#fff;}
+      .mob-wk-title{flex:1;font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+      .mob-wk-task.done .mob-wk-title{text-decoration:line-through;color:var(--muted);}
+      .mob-wk-empty{font-size:11px;color:var(--muted);padding:10px 14px;font-style:italic;background:#fff;border-radius:0 0 10px 10px;}
+
       /* 하단 네비게이션 */
       .mob-nav{flex-shrink:0;display:flex;background:#fff;border-top:1px solid var(--border);padding:6px 0 max(env(safe-area-inset-bottom),8px);}
       .mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;padding:4px 2px;transition:color .15s;}
@@ -1417,7 +1441,10 @@ function isUndated(t) { return !t.startDate&&!t.endDate; }
 function loadCats() {
   const raw=localStorage.getItem(SK_CATS);
   if(raw){try{categories=JSON.parse(raw);return;}catch(e){}}
-  categories=DEFAULT_CATS.map(c=>({...c})); saveCats();
+  // 신규 기기: 기본값만 저장, savedAt을 0으로 → Firebase 데이터가 항상 우선
+  categories=DEFAULT_CATS.map(c=>({...c}));
+  localStorage.setItem(SK_CATS, JSON.stringify(categories));
+  localStorage.setItem('leaflyene-data-savedAt', '1970-01-01T00:00:00.000Z');
 }
 function saveCats() {
   localStorage.setItem(SK_CATS, JSON.stringify(categories));
@@ -1430,7 +1457,10 @@ function saveCats() {
 function loadTasks() {
   const raw=localStorage.getItem(SK_TASKS);
   if(raw){try{tasks=JSON.parse(raw).map(norm);return;}catch(e){}}
-  tasks=defaults(); saveTasks();
+  // 신규 기기: 기본값만 저장, savedAt을 0으로 → Firebase 데이터가 항상 우선
+  tasks=defaults();
+  localStorage.setItem(SK_TASKS, JSON.stringify(tasks));
+  localStorage.setItem('leaflyene-data-savedAt', '1970-01-01T00:00:00.000Z');
 }
 function saveTasks() {
   localStorage.setItem(SK_TASKS, JSON.stringify(tasks));
@@ -1861,6 +1891,13 @@ function fbInit() {
       const fbTime    = new Date(data.updatedAt || 0).getTime();
       const localSaved = localStorage.getItem('leaflyene-data-savedAt');
       const localTime = new Date(localSaved || 0).getTime();
+
+      // todayOrder는 로컬에 없을 때 항상 Firebase에서 가져옴 (신규/다른 기기 대응)
+      if(data.todayOrder && !_todayOrder.length) {
+        _todayOrder = data.todayOrder;
+        localStorage.setItem('today-order', JSON.stringify(_todayOrder));
+      }
+
       if(fbTime > localTime + 2000) { // 2000ms 버퍼 (자기 저장 무시 + clock skew 대비)
         _fbUpdating = true;
         tasks      = data.tasks.map(norm);
@@ -3410,6 +3447,14 @@ function renderMobileAll(el) {
   el.innerHTML = h;
 }
 
+function mobToggleWkDay(hd) {
+  const body = hd.nextElementSibling;
+  const arr  = hd.querySelector('.mob-wk-arr');
+  if(!body) return;
+  body.classList.toggle('cl');
+  arr && arr.classList.toggle('cl');
+}
+
 function renderMobileWeek(el) {
   const todayStr = ds(today);
   const wkS = weekOf(today);
@@ -3420,30 +3465,33 @@ function renderMobileWeek(el) {
     const dtsRaw = tasks.filter(t=>{const s=t.startDate||t.endDate||'',e=t.endDate||t.startDate||'';return s&&e&&s<=dstr&&dstr<=e;});
     const dts = isT ? applyTodayOrder(dtsRaw) : dtsRaw;
     const isPast = dstr < todayStr;
-    const dayLabel = `${DAYS[dow]} ${d.getMonth()+1}.${d.getDate()}${isT?' ✦':''}`;
-    const hdStyle = isT ? 'background:var(--br-pale);border-color:var(--br);color:var(--br-dk);' : isPast ? 'opacity:.5;' : '';
-    h += `<div class="wday">
-      <div class="wday-hd ${isPast?'past':''}" style="${hdStyle}" onclick="toggleWday(this)">
-        <span class="dn">${DAYS[dow]}</span>
-        <span class="dd">${d.getMonth()+1}.${d.getDate()}${isT?' ✦':''}</span>
-        ${dts.length?`<span class="wday-cnt">${dts.length}</span>`:''}
-        <span class="wday-arr${isPast?' cl':''}">▾</span>
+    const collapsed = isPast && !isT;
+    const dowCls = dow===0?'su':dow===6?'sa':'';
+    h += `<div class="mob-wk-day">
+      <div class="mob-wk-hd${isT?' mob-wk-today':''}${isPast?' mob-wk-past':''}" onclick="mobToggleWkDay(this)">
+        <span class="mob-wk-dow ${dowCls}">${DAYS[dow]}</span>
+        <span class="mob-wk-date">${d.getMonth()+1}.${d.getDate()}${isT?' ✦':''}</span>
+        <span style="flex:1;"></span>
+        ${dts.length?`<span class="mob-wk-cnt">${dts.length}</span>`:''}
+        <span class="mob-wk-arr${collapsed?' cl':''}">▾</span>
       </div>
-      <div class="wday-body${isPast?' cl':''}">`;
-    if(!dts.length) h += `<div class="wday-empty">업무 없음</div>`;
+      <div class="mob-wk-body${collapsed?' cl':''}">`;
+    if(!dts.length) h += `<div class="mob-wk-empty">업무 없음</div>`;
     else dts.forEach(t=>{
-      h+=`<div class="mob-all-item ${t.done?'done':''}">
-        <div class="mob-all-chk ${t.done?'on':''}" onclick="toggle(${t.id});renderMobile();">${t.done?'✓':''}</div>
-        <div class="mob-all-title">${esc(t.title)}</div>
-        <button style="background:none;border:none;font-size:15px;cursor:pointer;opacity:.5;" onclick="openEdit(${t.id})">✏️</button>
+      const cats = taskCats(t); const c = catById(cats[0]);
+      h+=`<div class="mob-wk-task ${t.done?'done':''}">
+        <div style="width:3px;height:22px;border-radius:2px;background:${c.fg};flex-shrink:0;"></div>
+        <div class="mob-wk-chk ${t.done?'on':''}" onclick="toggle(${t.id});renderMobile();">${t.done?'✓':''}</div>
+        <div class="mob-wk-title">${esc(t.title)}</div>
+        <button style="background:none;border:none;font-size:15px;cursor:pointer;opacity:.4;padding:2px;" onclick="openEdit(${t.id})">✏️</button>
       </div>`;
     });
     h += `</div></div>`;
   }
   el.innerHTML = `<div class="mob-sec-hd">📅 이번 주</div>` + h;
-  const todayHd = el.querySelector('.wday-hd.td, .wday-hd:has(.dn)');
-  const todayWday = el.querySelector('[style*="br-pale"]')?.closest('.wday');
-  if(todayWday) todayWday.scrollIntoView({block:'start'});
+  // 오늘 섹션이 보이도록 스크롤
+  const todayDay = el.querySelector('.mob-wk-today')?.closest('.mob-wk-day');
+  if(todayDay) setTimeout(()=>todayDay.scrollIntoView({block:'start', behavior:'smooth'}), 80);
 }
 
 // ═══════════════════════════════════════════════════════
