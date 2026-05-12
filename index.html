@@ -76,17 +76,36 @@
       .mob-task-title{font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3;}
       .mob-task.done .mob-task-title{text-decoration:line-through;color:var(--muted);}
       .mob-task-meta{font-size:11px;color:var(--muted);margin-top:3px;}
+      .mob-task-grip{font-size:16px;color:#c0a060;padding:4px 6px 4px 2px;flex-shrink:0;touch-action:none;cursor:grab;line-height:1;}
       .mob-task-edit{background:none;border:none;font-size:20px;cursor:pointer;padding:4px 2px;flex-shrink:0;opacity:.5;}
       .mob-task-edit:hover{opacity:1;}
+      .mob-task.mob-dragging{opacity:.35;transform:scale(.97);}
+      .mob-task.mob-drag-over{border-color:var(--br);box-shadow:inset 0 -3px 0 var(--br);}
+      .mob-task-note{font-size:11px;color:var(--muted);margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.45;}
+      .mob-task-links{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
+      .mob-lnk{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:700;color:var(--br);background:var(--br-pale);padding:2px 7px;border-radius:8px;text-decoration:none;border:1px solid var(--br-lt);}
+      .mob-child-note{font-size:10px;color:var(--muted);margin-top:2px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;}
+      .mob-child-links{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;}
 
-      /* 전체업무 리스트 */
-      .mob-all-item{display:flex;align-items:center;gap:10px;background:#fff;border-radius:10px;padding:11px 13px;margin-bottom:7px;border:1px solid var(--border);}
-      .mob-all-item.done{opacity:.42;}
-      .mob-all-chk{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;flex-shrink:0;background:#fff;transition:all .18s;}
-      .mob-all-chk.on{background:var(--ok);border-color:var(--ok);color:#fff;}
-      .mob-all-title{flex:1;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-      .mob-all-item.done .mob-all-title{text-decoration:line-through;}
-      .mob-all-date{font-size:10px;color:var(--muted);flex-shrink:0;}
+      /* 전체업무 — 상하위 계층 */
+      .mob-group{margin-bottom:10px;}
+      .mob-parent-item{display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:12px 13px;border:1.5px solid var(--border);}
+      .mob-parent-item.done{opacity:.42;}
+      .mob-parent-bar{width:4px;height:32px;border-radius:3px;flex-shrink:0;}
+      .mob-parent-chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;flex-shrink:0;background:#fff;transition:all .18s;}
+      .mob-parent-chk.on{background:var(--ok);border-color:var(--ok);color:#fff;}
+      .mob-parent-title{flex:1;font-size:14px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
+      .mob-parent-item.done .mob-parent-title{text-decoration:line-through;color:var(--muted);}
+      .mob-parent-date{font-size:10px;color:var(--muted);flex-shrink:0;}
+      .mob-children{border-left:3px solid var(--br-lt);margin:2px 0 0 18px;border-radius:0 0 8px 8px;}
+      .mob-child-item{display:flex;align-items:center;gap:8px;background:var(--cream);padding:9px 12px;border-bottom:1px solid var(--border);}
+      .mob-child-item:last-child{border-bottom:none;border-radius:0 0 8px 8px;}
+      .mob-child-item.done{opacity:.42;}
+      .mob-child-hook{font-size:12px;color:var(--muted);flex-shrink:0;}
+      .mob-child-chk{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;cursor:pointer;flex-shrink:0;background:#fff;transition:all .18s;}
+      .mob-child-chk.on{background:var(--ok);border-color:var(--ok);color:#fff;}
+      .mob-child-title{flex:1;font-size:12px;font-weight:300;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+      .mob-child-item.done .mob-child-title{text-decoration:line-through;}
       .mob-cat-badge{display:inline-block;font-size:10px;padding:1px 7px;border-radius:8px;font-weight:700;margin-right:4px;margin-bottom:3px;}
 
       /* 하단 네비게이션 */
@@ -3281,60 +3300,112 @@ function renderMobileToday(el) {
     return;
   }
 
-  let h = `<div class="mob-sec-hd">☀️ 오늘의 업무<span class="mob-sec-cnt">${pending}</span></div>`;
+  let h = `<div class="mob-sec-hd">☀️ 오늘의 업무<span class="mob-sec-cnt">${pending}</span></div>
+    <div id="mobTodayList">`;
   todayTasks.forEach(t => {
     const cats = taskCats(t); const c = catById(cats[0]);
     const catTxt = cats.map(id=>{ const cc=catById(id); return `${cc.icon} ${cc.name}`; }).join(' · ');
-    h += `<div class="mob-task ${t.done?'done':''}">
+    const links = t.links && t.links.length ? t.links : [];
+    const linksH = links.length ? `<div class="mob-task-links">${links.map(l=>{
+      const url=typeof l==='string'?l:l.url; const lbl=typeof l==='object'&&l.label?l.label:url.replace(/^https?:\/\//,'').split('/')[0].replace(/^www\./,'');
+      return `<a class="mob-lnk" href="${esc(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 ${esc(lbl)}</a>`;
+    }).join('')}</div>` : '';
+    h += `<div class="mob-task ${t.done?'done':''}" data-tid="${t.id}">
+      <span class="mob-task-grip" ontouchstart="mobDragStart(event,${t.id})" onmousedown="mobDragStart(event,${t.id})">⠿</span>
       <div class="mob-task-bar" style="background:${c.fg};"></div>
       <div class="mob-task-chk ${t.done?'on':''}" onclick="toggle(${t.id});renderMobile();">${t.done?'✓':''}</div>
       <div class="mob-task-body">
         <div class="mob-task-title">${esc(t.title)}</div>
         ${catTxt?`<div class="mob-task-meta">${esc(catTxt)}</div>`:''}
+        ${t.note?`<div class="mob-task-note">${esc(t.note)}</div>`:''}
+        ${linksH}
       </div>
       <button class="mob-task-edit" onclick="openEdit(${t.id})">✏️</button>
     </div>`;
   });
+  h += `</div>`;
   el.innerHTML = h;
+}
+
+function _mobLinksHTML(t, cls) {
+  const links = t.links && t.links.length ? t.links : [];
+  if(!links.length) return '';
+  const chips = links.map(l => {
+    const url = typeof l==='string'?l:l.url;
+    const lbl = typeof l==='object'&&l.label ? l.label : url.replace(/^https?:\/\//,'').split('/')[0].replace(/^www\./,'');
+    return `<a class="mob-lnk" href="${esc(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 ${esc(lbl)}</a>`;
+  }).join('');
+  return `<div class="${cls}">${chips}</div>`;
+}
+
+function mobGroupHTML(root, children) {
+  const cats = taskCats(root); const c = catById(cats[0]);
+  const catBadges = cats.map(id=>{const cc=catById(id);return `<span class="mob-cat-badge" style="background:${cc.bg};color:${cc.fg}">${cc.icon} ${esc(cc.name)}</span>`;}).join('');
+  const dateStr = root.endDate ? fmtMD(root.endDate) : '';
+  const rootLinksH = _mobLinksHTML(root, 'mob-task-links');
+  let h = `<div class="mob-group">
+    <div class="mob-parent-item ${root.done?'done':''}">
+      <div class="mob-parent-bar" style="background:${c.fg};"></div>
+      <div class="mob-parent-chk ${root.done?'on':''}" onclick="toggle(${root.id});renderMobile();">${root.done?'✓':''}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="mob-parent-title">${esc(root.title)}</div>
+        <div style="margin-top:3px;">${catBadges}</div>
+        ${root.note?`<div class="mob-task-note">${esc(root.note)}</div>`:''}
+        ${rootLinksH}
+      </div>
+      ${dateStr?`<div class="mob-parent-date">${dateStr}</div>`:''}
+      <button style="background:none;border:none;font-size:16px;cursor:pointer;opacity:.4;padding:4px;flex-shrink:0;" onclick="openEdit(${root.id})">✏️</button>
+    </div>`;
+  if(children.length) {
+    h += `<div class="mob-children">`;
+    children.forEach(child => {
+      const childLinksH = _mobLinksHTML(child, 'mob-child-links');
+      h += `<div class="mob-child-item ${child.done?'done':''}">
+        <span class="mob-child-hook">↳</span>
+        <div class="mob-child-chk ${child.done?'on':''}" onclick="toggle(${child.id});renderMobile();">${child.done?'✓':''}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="mob-child-title">${esc(child.title)}</div>
+          ${child.note?`<div class="mob-child-note">${esc(child.note)}</div>`:''}
+          ${childLinksH}
+        </div>
+        <button style="background:none;border:none;font-size:14px;cursor:pointer;opacity:.4;padding:2px;flex-shrink:0;" onclick="openEdit(${child.id})">✏️</button>
+      </div>`;
+    });
+    h += `</div>`;
+  }
+  h += `</div>`;
+  return h;
 }
 
 function renderMobileAll(el) {
   const todayStr = ds(today);
-  const pending = tasks.filter(t=>!t.done);
-  const overdue = pending.filter(t=>t.endDate && t.endDate < todayStr);
-  const active  = pending.filter(t=>!t.endDate || t.endDate >= todayStr);
-  const done    = tasks.filter(t=>t.done).slice(0,10);
+  const { dated, undated } = buildTaskGroups(() => true);
 
-  function itemHTML(t) {
-    const cats = taskCats(t);
-    const c = catById(cats[0]);
-    const dateStr = t.endDate ? `~ ${fmtMD(t.endDate)}` : '';
-    return `<div class="mob-all-item ${t.done?'done':''}">
-      <div class="mob-all-chk ${t.done?'on':''}" onclick="toggle(${t.id});renderMobile();">${t.done?'✓':''}</div>
-      <div style="flex:1;min-width:0;">
-        <div class="mob-all-title">${esc(t.title)}</div>
-        <div style="margin-top:2px;">
-          ${cats.map(id=>{const cc=catById(id);return `<span class="mob-cat-badge" style="background:${cc.bg};color:${cc.fg}">${cc.icon} ${esc(cc.name)}</span>`;}).join('')}
-        </div>
-      </div>
-      ${dateStr?`<div class="mob-all-date">${dateStr}</div>`:''}
-      <button style="background:none;border:none;font-size:16px;cursor:pointer;opacity:.5;padding:4px;" onclick="openEdit(${t.id})">✏️</button>
-    </div>`;
-  }
+  const overdue = dated.filter(g => !g.root.done && g.root.endDate && g.root.endDate < todayStr);
+  const active  = dated.filter(g => !g.root.done && (!g.root.endDate || g.root.endDate >= todayStr));
+  const doneGrp = dated.filter(g => g.root.done).slice(0, 8);
 
   let h = '';
   if(overdue.length) {
     h += `<div class="mob-sec-hd" style="color:#e74c3c;">⚠️ 기간 초과<span class="mob-sec-cnt" style="background:#e74c3c;">${overdue.length}</span></div>`;
-    h += overdue.map(itemHTML).join('');
+    h += overdue.map(({root,children}) => mobGroupHTML(root,children)).join('');
     h += `<div style="margin-bottom:16px;"></div>`;
   }
+
   h += `<div class="mob-sec-hd">📋 진행 중<span class="mob-sec-cnt">${active.length}</span></div>`;
   if(!active.length) h += `<div class="mob-empty" style="padding:20px;"><div class="mob-empty-txt">진행 중인 업무가 없습니다</div></div>`;
-  else h += active.map(itemHTML).join('');
-  if(done.length) {
+  else h += active.map(({root,children}) => mobGroupHTML(root,children)).join('');
+
+  if(undated.length) {
+    h += `<div style="margin-bottom:16px;"></div>`;
+    h += `<div class="mob-sec-hd">📭 날짜 미정</div>`;
+    h += undated.map(({root,children}) => mobGroupHTML(root,children)).join('');
+  }
+
+  if(doneGrp.length) {
     h += `<div style="margin-bottom:16px;"></div>`;
     h += `<div class="mob-sec-hd" style="opacity:.6;">✓ 최근 완료</div>`;
-    h += done.map(itemHTML).join('');
+    h += doneGrp.map(({root,children}) => mobGroupHTML(root,children)).join('');
   }
   el.innerHTML = h;
 }
@@ -3373,6 +3444,87 @@ function renderMobileWeek(el) {
   const todayHd = el.querySelector('.wday-hd.td, .wday-hd:has(.dn)');
   const todayWday = el.querySelector('[style*="br-pale"]')?.closest('.wday');
   if(todayWday) todayWday.scrollIntoView({block:'start'});
+}
+
+// ═══════════════════════════════════════════════════════
+// Mobile touch drag-to-reorder (오늘의 업무)
+// ═══════════════════════════════════════════════════════
+let _mobDrag = null;
+
+function mobDragStart(e, id) {
+  e.preventDefault();
+  const isTouch = e.type === 'touchstart';
+  const startY = isTouch ? e.touches[0].clientY : e.clientY;
+  const card = e.currentTarget.closest('.mob-task');
+  if(!card) return;
+
+  _mobDrag = { id, card, startY, currentOver: null };
+  card.classList.add('mob-dragging');
+
+  if(isTouch) {
+    document.addEventListener('touchmove', mobDragMove, {passive:false});
+    document.addEventListener('touchend',  mobDragEnd);
+  } else {
+    document.addEventListener('mousemove', mobDragMove);
+    document.addEventListener('mouseup',   mobDragEnd);
+  }
+}
+
+function mobDragMove(e) {
+  if(!_mobDrag) return;
+  e.preventDefault();
+  const isTouch = e.type === 'touchmove';
+  const y = isTouch ? e.touches[0].clientY : e.clientY;
+  const x = isTouch ? e.touches[0].clientX : e.clientX;
+
+  // 손가락 아래 요소 찾기
+  _mobDrag.card.style.pointerEvents = 'none';
+  const under = document.elementFromPoint(x, y);
+  _mobDrag.card.style.pointerEvents = '';
+
+  const overCard = under?.closest('.mob-task[data-tid]');
+  const overId = overCard ? Number(overCard.dataset.tid) : null;
+
+  document.querySelectorAll('#mobTodayList .mob-task').forEach(el => el.classList.remove('mob-drag-over'));
+  if(overCard && overId !== _mobDrag.id) {
+    overCard.classList.add('mob-drag-over');
+    _mobDrag.currentOver = overId;
+  } else {
+    _mobDrag.currentOver = null;
+  }
+}
+
+function mobDragEnd(e) {
+  if(!_mobDrag) return;
+  document.removeEventListener('touchmove', mobDragMove);
+  document.removeEventListener('touchend',  mobDragEnd);
+  document.removeEventListener('mousemove', mobDragMove);
+  document.removeEventListener('mouseup',   mobDragEnd);
+
+  _mobDrag.card.classList.remove('mob-dragging');
+  document.querySelectorAll('#mobTodayList .mob-task').forEach(el => el.classList.remove('mob-drag-over'));
+
+  const fromId = _mobDrag.id;
+  const toId   = _mobDrag.currentOver;
+  _mobDrag = null;
+
+  if(!toId || fromId === toId) return;
+
+  // 현재 순서에서 인덱스 계산
+  const cards = [...document.querySelectorAll('#mobTodayList .mob-task[data-tid]')];
+  const ids = cards.map(c => Number(c.dataset.tid));
+  const fromIdx = ids.indexOf(fromId);
+  const toIdx   = ids.indexOf(toId);
+  if(fromIdx === -1 || toIdx === -1) return;
+
+  ids.splice(fromIdx, 1);
+  ids.splice(toIdx, 0, fromId);
+  _todayOrder = ids;
+  localStorage.setItem('today-order', JSON.stringify(ids));
+  if(!_fbUpdating) fbSave();
+  renderToday();
+  renderWeekly();
+  renderMobile();
 }
 
 // ═══════════════════════════════════════════════════════
