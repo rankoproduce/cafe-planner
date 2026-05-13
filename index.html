@@ -1989,15 +1989,26 @@ async function gcalOnToken(resp) {
 async function gcalSyncAll() {
   if(!gcalToken || !gcalCalId) return;
   updateGcalBtn('⏳ 동기화 중...');
+
+  // 날짜 미설정인데 gcalEventId가 있으면 → 잘못 등록된 이벤트 삭제
+  const undated = tasks.filter(t => !t.startDate && !t.endDate && t.gcalEventId);
+  for(const t of undated) {
+    await gcalDeleteEvent(t);
+    t.gcalEventId = null;
+  }
+  if(undated.length) saveTasks();
+
+  // 날짜 설정된 업무만 동기화
+  const syncable = tasks.filter(t => t.startDate || t.endDate);
   let done=0;
-  for(const t of tasks) {
+  for(const t of syncable) {
     if(t.gcalEventId) {
       await gcalUpdateEvent(t); // 기존 일정 업데이트
     } else {
       await gcalCreateEvent(t); // 신규 일정 생성
     }
     done++;
-    updateGcalBtn(`⏳ ${done}/${tasks.length} 동기화 중...`);
+    updateGcalBtn(`⏳ ${done}/${syncable.length} 동기화 중...`);
   }
 }
 
@@ -2075,6 +2086,8 @@ function gcalEndDate(dateStr) {
 }
 
 function gcalBody(t) {
+  // 날짜 미설정 업무는 구글 캘린더에 동기화하지 않음
+  if(!t.startDate && !t.endDate) return null;
   const cats = taskCats(t).map(id=>catById(id).name).join(', ');
   let desc = '';
   if(cats)   desc += `[분류] ${cats}\n`;
@@ -2083,8 +2096,8 @@ function gcalBody(t) {
     const u = typeof l==='string'?l:l.url; const lb = typeof l==='object'&&l.label?` (${l.label})`:'';
     return `🔗 ${u}${lb}`;
   }).join('\n');
-  const s = t.startDate || t.endDate || new Date().toISOString().split('T')[0];
-  const e = t.endDate   || t.startDate || s;
+  const s = t.startDate || t.endDate;
+  const e = t.endDate   || t.startDate;
   return {
     summary: t.title,
     description: desc.trim(),
@@ -2107,17 +2120,25 @@ async function gcalRequest(method, url, body=null) {
 
 async function gcalCreateEvent(t) {
   if(!gcalToken || !gcalCalId) return;
+  const body = gcalBody(t);
+  if(!body) return; // 날짜 미설정 업무는 스킵
   try {
-    const res = await gcalRequest('POST', gcalEventsUrl(), gcalBody(t));
+    const res = await gcalRequest('POST', gcalEventsUrl(), body);
     if(res?.ok){ const data=await res.json(); t.gcalEventId=data.id; saveTasks(); }
   } catch(e){ console.warn('GCal create:', e); }
 }
 
 async function gcalUpdateEvent(t) {
   if(!gcalToken || !gcalCalId) return;
+  const body = gcalBody(t);
+  if(!body) {
+    // 날짜가 없어진 업무: 구글 캘린더에서도 삭제
+    if(t.gcalEventId) await gcalDeleteEvent(t);
+    return;
+  }
   if(!t.gcalEventId){ await gcalCreateEvent(t); return; }
   try {
-    const res = await gcalRequest('PATCH', gcalEventsUrl(t.gcalEventId), gcalBody(t));
+    const res = await gcalRequest('PATCH', gcalEventsUrl(t.gcalEventId), body);
     if(res?.status===404){ t.gcalEventId=null; await gcalCreateEvent(t); }
   } catch(e){ console.warn('GCal update:', e); }
 }
